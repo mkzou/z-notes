@@ -67,8 +67,6 @@ ansible_ssh_pass=password
 
 ## 服务器初始化
 
-> 
-
 > **01-检测服务器连通性**
 
 ```shell
