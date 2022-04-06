@@ -1,18 +1,30 @@
 # 基于KubeSphere玩转k8s-GlusterFS安装手记
 
-大家好，我是老Z！
+**大家好，我是老Z！**
 
-基于KubeSphere玩转k8s系列文档是我在云原生技术领域的学习和运维实践手记，内容涵盖但不限于以下技术领域：
+> 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
+>
+> 如果你喜欢本文，请分享给你的小伙伴！
 
-- **KubeSphere**
-- **Kubernetes**
-- **Ansible**
-- **自动化运维**
-- **CNCF技术栈**
+**本系列文档内容涵盖(但不限于)以下技术领域：**
+
+> - **KubeSphere**
+>
+> - **Kubernetes**
+>
+> - **Ansible**
+>
+> - **自动化运维**
+>
+> - **CNCF技术栈**
+
+
+
+## 1. 本文简介
 
 本文接着上篇 **<<基于KubeSphere玩转k8s-KubeSphere安装手记>>** ，继续玩转KubeSphere，k8s，本期会讲解分布式存储GluterFS的安装部署以及与KubeSphere安装的k8s集群的对接。
 
-> **本期知识点**
+> **本文知识点**
 
 - 定级：**入门级**
 - 使用Ansible安装部署GlusterFS服务
@@ -24,6 +36,7 @@
 
 |      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
 | :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
+|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
 | ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
@@ -33,7 +46,7 @@
 
 
 
-## Ansible配置
+## 2. Ansible配置
 
 > **01-增加hosts配置**
 
@@ -63,7 +76,7 @@ ansible_ssh_pass=password
 
 
 
-## GlusterFS安装配置
+## 3. GlusterFS安装配置
 
 > **01-检测服务器连通性**
 
@@ -296,7 +309,7 @@ State: Peer in Cluster (Connected)
 
 
 
-## 安装配置Heketi
+## 4. 安装配置Heketi
 **(在GlusterFs服务器中任选一个节点,这里选择节点1，glusterfs-node-0，也可以将Heketi独立部署)**
 
 > **01-安装配置heketi服务**
@@ -781,7 +794,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 
    
 
-## k8s集群对接GlusterFs(命令行和KubeSphere图形化)
+## 5. k8s集群对接GlusterFs(命令行和KubeSphere图形化)
 
 ### 1. k8s命令行手动配置
 
@@ -1172,13 +1185,9 @@ secret "heketi-secret" deleted
 
 <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-9.png" alt="kube-glusterfs-pvc-9" style="zoom:50%;" />
 
-## 总结
 
-> **01-遗留问题**
 
-图形化对接GlusterFS失败，问题有待解决。
-
-## 常见问题
+## 6. 常见问题
 
 
 
@@ -1260,7 +1269,15 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 
   
 
-## 尾部
+## 7. 总结
+
+以上内容详细记录了GlusterFS安装部署过程以及KubeSphere对接GlusterFS的全过程，部署过程中k8s命令行对接GlusterFS成功，但是在KubeSphere图形化对接的过程中出现异常，后续解决后，我再更新文档。
+
+> **01-遗留问题**
+
+图形化对接GlusterFS失败，问题有待解决。
+
+
 
 > **参考文档**
 

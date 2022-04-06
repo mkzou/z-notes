@@ -1,16 +1,30 @@
 # 基于KubeSphere玩转k8s-KubeSphere安装手记
 
-大家好，我是老Z！
+**大家好，我是老Z！**
 
-基于KubeSphere玩转k8s系列文档是我在云原生技术领域的学习和运维实践手记，内容涵盖但不限于以下技术领域：
+> 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
+>
+> 如果你喜欢本文，请分享给你的小伙伴！
 
-- **KubeSphere**
-- **Kubernetes**
-- **Ansible**
-- **自动化运维**
-- **CNCF技术栈**
+**本系列文档内容涵盖(但不限于)以下技术领域：**
 
-> **本期知识点**
+> - **KubeSphere**
+>
+> - **Kubernetes**
+>
+> - **Ansible**
+>
+> - **自动化运维**
+>
+> - **CNCF技术栈**
+
+
+
+## 1. 本文简介
+
+ 本文是基于KubeSphere玩转k8s的开篇之作，主要记录了KubeSphere的安装配置过程。
+
+> **本文知识点**
 
 - 定级：**入门级**
 
@@ -24,6 +38,7 @@
 
 |      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
 | :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
+|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
 | ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
@@ -33,7 +48,7 @@
 
 
 
-## Ansible配置
+## 2. Ansible配置
 
 
 
@@ -65,7 +80,7 @@ ansible_ssh_pass=password
 
 
 
-## 服务器初始化
+## 3. 服务器初始化
 
 > **01-检测服务器连通性**
 
@@ -393,7 +408,7 @@ ks-k8s-master-0 | CHANGED | rc=0 >>
 
 
 
-## Kubernetes基础依赖包安装
+## 4. Kubernetes基础依赖包安装
 
 > **01-安装基础依赖包**
 
@@ -456,7 +471,7 @@ libglusterfs0-9.5-1.el7.x86_64
 
 
 
-## 使用KubeKey部署KubeSphere和Kubernetes
+## 5. 使用KubeKey部署KubeSphere和Kubernetes
 
 > **01-下载KubeKey**
 
@@ -1711,7 +1726,7 @@ networkpolicies.networking.k8s.io                notificationmanagers.notificati
 
 
 
-## 深入探究
+## 6. 深入探究
 
 > **01-docker的安装方式及位置**
 
@@ -1834,7 +1849,7 @@ ff5a86654de9   8e60ea3644d6                                                "kube
 
 
 
-## 常见问题
+## 7. 常见问题
 
 > **问题1**
 
@@ -1863,7 +1878,9 @@ failed: [LocalHost] [DownloadBinaries] exec failed after 1 retires: Failed to do
 
 
 
-## 尾部
+## 8. 总结
+
+以上内容详细记录了KubeSphere安装K8S的全过程。
 
 
 
