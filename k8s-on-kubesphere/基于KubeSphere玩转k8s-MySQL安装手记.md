@@ -28,6 +28,14 @@
 
   **数据库的可靠性、可用性是运维的重中之重，不容忽视，切记！！！**
 
+> 本文知识量
+
+- 阅读时长：40分
+- 行：2658
+- 单词：15475
+- 字符：120711
+- 图片：80张
+
 > **本文知识点**
 
 - 定级：**入门级**
@@ -69,9 +77,9 @@
 
 1. 打开[MySQL官方网站](https://dev.mysql.com/doc/)
    - 选择**MySQL5.7**版本的Reference Manual。
-   - ![image-20220509141222130](/Users/z/data-air/个人知识库/图床/image-20220509141222130.png)
+   - ![image-20220509141222130](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220509141222130.png)
    - 在**Installing MySQL on Linux**章节中，搜寻一番，发现在**[Deploying MySQL on Linux with Docker](https://dev.mysql.com/doc/refman/5.7/en/linux-installation-docker.html)**小节下两篇具有参考价值的文档，先去看看。
-   - ![image-20220509142153500](/Users/z/data-air/个人知识库/图床/image-20220509142153500.png)
+   - ![image-20220509142153500](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220509142153500.png)
    - 浏览完以后你会发现，只是学会了利用Docker Image安装MySQL的基本方法，细节不上图了。
    - 虽然官方没有提到如何在K8S上部署MySQL，但是我已经有Docker和K8S的基础知识了，先不去进行搜索吃别人的了，自己尝试在K8S上部署一个单节点的MySQL。
 
@@ -117,23 +125,23 @@
 
      > **这一步没有使用admin用户，采用多租户户形式，模拟真实的生产环境**
 
-   - ![kubesphere-lstack-login](/Users/z/data-air/个人知识库/图床/kubesphere-lstack-login.png)
+   - ![kubesphere-lstack-login](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-lstack-login.png)
 
-   - ![kubesphere-workspace-lstack](/Users/z/data-air/个人知识库/图床/kubesphere-workspace-lstack.png)
+   - ![kubesphere-workspace-lstack](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-workspace-lstack.png)
 
    - 点击**项目**，点击**lstack**项目，进入项目的管理页面（如无特殊说明，后面的很多界面操作都是在该页面完成）。
 
-   - ![kubesphere-projects-lstack](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack.png)
+   - ![kubesphere-projects-lstack](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack.png)
 
-   - ![kubesphere-projects-lstack-overview](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-overview.png)
+   - ![kubesphere-projects-lstack-overview](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-overview.png)
 
    - **应用负载**->**工作负载**->**有状态副本集**，点击**创建**。
 
-   - ![kubesphere-projects-lstack-statefulsets](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets.png)
+   - ![kubesphere-projects-lstack-statefulsets](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets.png)
 
    - 弹出**创建有状态副本集**页面，**基本信息**页，**名称**输入**mysql**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-0](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-0.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-0](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-0.png)
 
    - **容器组设置**页。
 
@@ -149,33 +157,33 @@
      - **同步主机时区**：勾选上
      - 其他未说明的配置采用默认值
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-1](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-1.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-1.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-2](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-2.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-2.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-3](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-3.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-3](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-3.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-4](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-4.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-4](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-4.png)
 
    - **创建保密字典**：在**环境变量**选项中，点击**创建保密字典**，按后续图示操作。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-5](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-5.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-5](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-5.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-6](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-6.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-6](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-6.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-7](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-7.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-7](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-7.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-8](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-8.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-8](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-8.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-9](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-9.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-9](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-9.png)
 
    - 按以上信息配置完成后，点击**对号**按钮。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-10](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-10.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-10](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-10.png)
 
    - **容器组设置**完成后，点击**下一步**，进入**存储卷设置**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-11](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-11.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-11](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-11.png)
 
    - **存储卷设置**->**存储卷模板**->**添加存储卷模板**。
 
@@ -186,77 +194,77 @@
      - 存储卷容量：5Gi
      - 挂载路径：读写 /var/lib/mysql
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-12](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-12.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-12](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-12.png)
 
    - 按以上信息配置完成后，点击**对号**按钮。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-13](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-13.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-13](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-13.png)
 
    - **存储卷设置**完成后，点击**下一步**，进入**高级设置**，保持默认值，点击**创建**按钮。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-14](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-14.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-14](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-14.png)
 
    - **创建**成功后，自动返回工作负载页面。第一次创建会去DockerHub下载镜像，所以初始显示状态为**更新中**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-15](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-15.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-15](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-15.png)
 
    - 镜像下载完成并且容器配置正确时，状态变成**运行中**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-16](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-16.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-16](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-16.png)
 
    - 点击**mysql**，进入有状态副本集详细页面。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-17](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-17.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-17](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-17.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-18](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-18.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-18](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-18.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-19](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-19.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-19](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-19.png)
 
    - **监控**，可以看到初始启动时的资源使用情况，后续可以根据监控数据调整我们的资源的配置。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-20](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-20.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-20](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-20.png)
 
    - **环境变量**，可以看到我们新增加的Secret字典生效了，并且密码是隐藏显示的。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-21](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-21.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-21](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-21.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-22](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-22.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-22](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-22.png)
 
    - 再来看看**容器组**的详细信息，在**资源状态**页面，点击容器组**mysql-0**
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-23](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-23.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-23](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-23.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-24](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-24.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-24](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-24.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-25](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-25.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-25](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-25.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-26](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-26.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-26](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-26.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-27](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-27.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-27](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-27.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-28](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-28.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-28](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-28.png)
 
    - 再来看看StatefulSet对应的服务（Service），**应用负载**->**服务**。
 
    - 可以看到自动创建了一个StatefulSet MySQL对应的有状态服务（Headless），**mysql-2v7f(mysql)**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-29](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-29.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-29](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-29.png)
 
    - 点击**mysql-2v7f(mysql)**，可以查看服务详情。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-30](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-30.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-30](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-30.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-31](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-31.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-31](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-31.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-32](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-32.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-32](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-32.png)
 
    - 最后验证一下，我们的MySQL服务是否正常（这里只看服务本身，先不测试外部连接）。
 
    - **应用负载**->**工作负载**->**有状态副本集**->**mysql**->**容器组**->**mysql-0**->**终端**
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-33](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-33.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-33](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-33.png)
 
-   - ![image-20220510112902273](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-34.png)
+   - ![image-20220510112902273](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-34.png)
 
    - 至此，MySQL在K8S的基本安装就完成了，K8S集群内的其他应用可以通过svc的地址访问MySQL服务(svc地址就是**mysql-2v7f.lstack**)，此时名字看着还是很不友好，我们先不用它。
 
@@ -274,15 +282,15 @@
 
    - **工作台**->**项目**->点击**具体的项目**->**项目设置**->**网关设置**，点击**开启网关**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-35](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-35.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-35](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-35.png)
 
    - 目前访问模式有NodePort和LoadBalancer，但是LoadBalancer只支持公有云提供商云上的负载均衡器，所以我们只能选择NodePort，点击确定。
 
      > **NodePort模式里会创建一个采用了nginx-ingress的kubesphere-router的容器组，细节我们会在以后的专文探讨**
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-36](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-36.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-36](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-36.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-37](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-37.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-37](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-37.png)
 
    - 网关设置的细节不在本文深入讨论，后续会有专文探讨。现在，做到这一步就OK了。
 
@@ -292,17 +300,17 @@
 
      > 这里有一个**外部服务**的选项，那个是基于Ingress使用域名访问的，不是目前我们想要的方式。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-38](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-38.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-38](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-38.png)
 
    - **指定工作负载创建服务-基本信息**。
 
      - **名称：**mysql-external
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-39](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-39.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-39](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-39.png)
 
    - **指定工作负载创建服务-服务设置**，点击**指定工作负载**，选择**有状态副本集**->**mysql**，点击**确定**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-40](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-40.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-40](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-40.png)
 
    - **指定工作负载创建服务-服务设置**，**端口**配置。
 
@@ -311,17 +319,17 @@
      - **容器端口：** 3306
      - **服务端口：** 3306
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-41](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-41.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-41](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-41.png)
 
    - **指定工作负载创建服务-高级设置**。
      
      - **外部访问：** **访问模式**选择NodePort
      
-   - ![kubesphere-projects-lstack-statefulsets-mysql-42](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-42.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-42](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-42.png)
      
    - 完成所有设置后，点击**创建**，创建成功会自动返回服务列表，在服务列表中可以看到我们新创建的服务**mysql-external**及自动分配的外部访问端口号。
      
-   - ![kubesphere-projects-lstack-statefulsets-mysql-43](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-43.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-43](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-43.png)
      
    - 先用telnet命令测试一下，MySQL服务的连通性，能看到下面的结果就说明MySQL已经可以在K8S集群外部访问了。
      
@@ -493,13 +501,13 @@
    
    - 创建ConfigMap配置文件，**配置**->**配置字典**，点击**创建**。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-44](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-44.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-44](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-44.png)
    
    - **创建配置字典-基本信息**。
    
      - 名称：mysql-cnf
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-45](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-45.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-45](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-45.png)
    
    - **创建配置字典-数据设置**。
    
@@ -507,27 +515,27 @@
      - **键：** custom.cnf
      - **值：** 粘贴上面的配置参数
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-46](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-46.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-46](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-46.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-47](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-47.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-47](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-47.png)
    
    - 填写完键值信息后，点击**对号**确定，最后点击**创建**，创建完成后会返回**配置字典**页面。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-48](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-48.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-48](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-48.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-49](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-49.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-49](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-49.png)
    
    - 接下来将自定义配置文件，挂载到mysql容器。
    
    - **应用负载**->**工作负载**->**有状态副本集**->点击**mysql**->进入详细配置页面->**更多操作**-点击**编辑设置**。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-50](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-50.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-50](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-50.png)
    
    - **编辑设置**->**存储卷**->**挂载配置字典或保密字典**。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-51](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-51.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-51](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-51.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-52](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-52.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-52](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-52.png)
    
    - **存储卷**。
    
@@ -542,27 +550,27 @@
          - 键：custom.cnf
          - 路径：custom.cnf
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-53](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-53.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-53](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-53.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-54](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-54.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-54](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-54.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-55](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-55.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-55](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-55.png)
    
    - 输入完成后，点击**对号**。 
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-56](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-56.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-56](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-56.png)
    
    - 再次点击**对号**，点击**确定**，mysql容器会自动开始重建。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-57](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-57.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-57](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-57.png)
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-58](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-58.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-58](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-58.png)
    
    - 重建成功后我们验证一下配置文件是否成功挂载。
    
    - 先看一下容器组的配置，发现新增了一个存储卷**volume-xxxx**。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-59](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-59.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-59](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-59.png)
    
    - **终端**->进入容器内部查看。
    
@@ -674,11 +682,11 @@
 
    - **配置**->**配置字典**，找到**mysql-cnf**，点击右侧的**三个竖点**，点击**编辑YAML**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-60](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-60.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-60](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-60.png)
 
    - 打开**编辑YAML**页面，可以直接复制所有内容，也可以点击右上角的下载图标，下载文件（也可以利用上传图标上传文件）。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-61](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-61.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-61](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-61.png)
 
    - 获取的现网配置不能完全的拿来就用，需要修改，把系统自动添加的一些元数据信息清理掉。
 
@@ -1126,9 +1134,9 @@
 
    - 在GitHub新建一个仓库，仓库名称**[k8s-yaml](https://github.com/devops/k8s-yaml)**，添加一个README文件初始化仓库，点击**Create repository**，确认创建。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-62](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-62.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-62](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-62.png)
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-63](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-63.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-63](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-63.png)
 
    - 将代码仓库Clone回本地。
 
@@ -1202,7 +1210,7 @@
      
    - 在GitHub上查看，确认代码是否提交。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-64](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-64.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-64](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-64.png)
 
    - 接下来将资源配置清单同步到Gitee备份仓库。
 
@@ -1213,11 +1221,11 @@
 
      > 创建完成后可去**仓库设置**中修改为开源
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-65](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-65.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-65](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-65.png)
 
    - 创建完成后，因为我们创建的时候，没选择初始化仓库的配置，所以，默认会显示一个帮助页面，告诉你该如何提交代码到仓库。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-66](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-66.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-66](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-66.png)
 
    - 因为，我们已经有了代码仓库，所以我们选择**已有仓库**的配置方法，将已有代码提交到Gitee。
 
@@ -1243,13 +1251,13 @@
 
    - 在Gitee上查看，确认代码是否提交。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-67](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-67.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-67](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-67.png)
 
    - 修改Gitee仓库为开源(可选)。
 
    - Gitee仓库->**管理**->**仓库设置**->**基本信息**，最后面**是否开源**，选择**开源**，**仓库公开须知**，三个都勾选，点击**保存**。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-70](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-70.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-70](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-70.png)
 
    - 修改后，你的代码仓库就是开源，所有人可见的了。
 
@@ -1456,7 +1464,7 @@
 
    - 回到我们的KubeSphere的管理控制台，发现mysql的工作负载也能在界面中显示，这也验证了在原生k8s上的操作也会直接反应到KubeSphere的管理控制台。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-71](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-71.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-71](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-71.png)
 
    
 
@@ -1588,7 +1596,7 @@
      
    - 查看Gitee在线代码仓库是否有变更。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-72](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-72.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-72](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-72.png)
    
    - 在个人的办公电脑上，同步更新后的代码。
    
@@ -1624,7 +1632,7 @@
    
    - 查看GitHub在线代码仓库是否有变更。
    
-   - ![kubesphere-projects-lstack-statefulsets-mysql-73](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-73.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-73](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-73.png)
    
 7. 再次体验GitOps
 
@@ -2567,7 +2575,7 @@
      
    - MySQL容器性能监控图。
 
-   - ![kubesphere-projects-lstack-statefulsets-mysql-74](/Users/z/data-air/个人知识库/图床/kubesphere-projects-lstack-statefulsets-mysql-74.png)
+   - ![kubesphere-projects-lstack-statefulsets-mysql-74](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-74.png)
 
    - 清理测试数据(为了保证数据更精准，建议每次测试前都清理数据，准备数据，测试)。
 
