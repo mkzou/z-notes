@@ -3649,7 +3649,7 @@ journalctl -u elasticsearch.service
    
    - 上面的关键词不行，我又换了一个思路**fluent-bit x-pack elasticsearch**，毕竟我们的安全验证是启用了x-pack插件。
    
-   - 哈哈哈哈，别说我还真找到一篇有意义并帮我最终解决问题的文档，那就是[它](https://vqiu.cn/efk-kube/)。
+   - 哈哈哈哈，别说我还真找到一篇有意义并帮我最终解决问题的文档，那就是[它](https://vqiu.cn/efk-kube/)
    
    - ![image-20220428110517048](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220428110517048.png)
    

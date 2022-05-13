@@ -3,22 +3,20 @@
 **大家好，我是老Z！**
 
 > 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
->
+> 
 > 如果你喜欢本文，请分享给你的小伙伴！
 
 **本系列文档内容涵盖(但不限于)以下技术领域：**
 
 > - **KubeSphere**
->
+> 
 > - **Kubernetes**
->
+> 
 > - **Ansible**
->
+> 
 > - **自动化运维**
->
+> 
 > - **CNCF技术栈**
-
-
 
 ## 1. 本文简介
 
@@ -34,17 +32,15 @@
 
 > **演示服务器配置**
 
-|      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
-| :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
-|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
-| ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| glusterfs-node-0 | 192.168.9.95 |  4   |  8   |   40   |  200   |            GlusterFS             |
-| glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
-| glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
-
-
+| 主机名              | IP           | CPU | 内存  | 系统盘 | 数据盘 | 用途                               |
+|:----------------:|:------------:|:---:|:---:|:---:|:---:|:--------------------------------:|
+| zdevops-master   | 192.168.9.9  | 2   | 4   | 40  | 200 | Ansible运维控制节点                    |
+| ks-k8s-master-0  | 192.168.9.91 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
+| ks-k8s-master-1  | 192.168.9.92 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
+| ks-k8s-master-2  | 192.168.9.93 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
+| glusterfs-node-0 | 192.168.9.95 | 4   | 8   | 40  | 200 | GlusterFS                        |
+| glusterfs-node-1 | 192.168.9.96 | 4   | 8   | 40  | 200 | GlusterFS                        |
+| glusterfs-node-2 | 192.168.9.97 | 4   | 8   | 40  | 200 | GlusterFS                        |
 
 ## 2. Ansible配置
 
@@ -74,8 +70,6 @@ ansible_ssh_user=root
 ansible_ssh_pass=password
 ```
 
-
-
 ## 3. GlusterFS安装配置
 
 > **01-检测服务器连通性**
@@ -99,8 +93,6 @@ glusterfs-node-0 | SUCCESS => {
     "ping": "pong"
 }
 ```
-
-
 
 > **02-初始化服务器配置**
 
@@ -132,7 +124,6 @@ PLAY RECAP *********************************************************************
 glusterfs-node-0           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 glusterfs-node-1           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 glusterfs-node-2           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-
 ```
 
 **重点注意：ansible-playbook的 -l 参数，需要指定为glusterfs，因为init-base.yaml文件默认指定的是所有服务器都执行，不加-l就会把hosts文件里指定的所有服务器都初始化了。**
@@ -168,8 +159,6 @@ glusterfs-node-0           : ok=3    changed=3    unreachable=0    failed=0    s
 glusterfs-node-1           : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 glusterfs-node-2           : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
-
-
 
 > **04-验证GlusterFS服务状态**
 
@@ -231,10 +220,7 @@ tcp    LISTEN     0      128       *:24007                 *:*                  
 
 glusterfs-node-2 | CHANGED | rc=0 >>
 tcp    LISTEN     0      128       *:24007                 *:*                   users:(("glusterd",pid=9868,fd=10))
-
 ```
-
-
 
 > **05-检测GlusterFS集群节点之间的连通性**
 
@@ -269,10 +255,7 @@ PING glusterfs-node-2 (192.168.9.97) 56(84) bytes of data.
 --- glusterfs-node-2 ping statistics ---
 4 packets transmitted, 4 received, 0% packet loss, time 3000ms
 rtt min/avg/max/mdev = 0.223/0.264/0.297/0.028 ms
-
 ```
-
-
 
 > **06-配置可信池(Configure the trusted pool)**
 
@@ -307,21 +290,20 @@ Uuid: cd56bacf-f62b-4310-b193-5c600cf75a6b
 State: Peer in Cluster (Connected)
 ```
 
-
-
 ## 4. 安装配置Heketi
+
 **(在GlusterFs服务器中任选一个节点,这里选择节点1，glusterfs-node-0，也可以将Heketi独立部署)**
 
 > **01-安装配置heketi服务**
 
-  - **01.配置软件源**
-  - **02.安装heketi和heketi-client**
-  - **03.生成heketi管理用ssh-key，并配置服务器免密**
-  - **04.创建heketi配置文件heketi.json**
-  - **05.启动heketi服务并设置开机自启**
-  - **06.创建topology.json配置文件**
-  - **07.利用topoly.json配置文件创建集群**
-  - **08.配置heketi管理用环境变量**
+- **01.配置软件源**
+- **02.安装heketi和heketi-client**
+- **03.生成heketi管理用ssh-key，并配置服务器免密**
+- **04.创建heketi配置文件heketi.json**
+- **05.启动heketi服务并设置开机自启**
+- **06.创建topology.json配置文件**
+- **07.利用topoly.json配置文件创建集群**
+- **08.配置heketi管理用环境变量**
 
 ```shell
 # 利用ansible-playbook安装配置heketi服务
@@ -380,8 +362,6 @@ glusterfs-node-2           : ok=1    changed=1    unreachable=0    failed=0    s
 localhost                  : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
-
-
 > **02-检测服务状态**
 
 ```shell
@@ -432,12 +412,10 @@ Id:c139bd449c952355a85a0e7d50754435     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 ```
 
-
-
 > **03-验证测试**
 
 1. **创建卷**
-
+   
    ```shell
    # 创建一个2G大小3副本的卷
    [root@glusterfs-node-0 ~]# heketi-cli volume create --size=2 --replica=3
@@ -474,7 +452,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
    ```
 
 2. **挂载测试**
-
+   
    ```shell
    # 查看卷的详细信息
    [root@glusterfs-node-0 ~]# heketi-cli volume info 4e6a0c0cdd8a4457cee30a2bb50c8dd5
@@ -530,12 +508,10 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
    /dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
    ```
 
-   
-
 3. **底层详细信息查看**
-
+   
    **可以看出底层vg和lv的创建详情，了解底层的分配细节**
-
+   
    ```shell
    ## 节点一 glusterfs-node-0
    
@@ -551,7 +527,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Free PE               50649
      Allocated PE          518
      PV UUID               6Wtn9q-pE1L-qNdS-wT2N-oiNy-6UEL-1pUa9G
-     
+   
    # 查看节点创建出的vg
    [root@glusterfs-node-0 ~]# vgdisplay 
      --- Volume group ---
@@ -596,7 +572,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Read ahead sectors     auto
      - currently set to     8192
      Block device           253:4
-      
+   
      --- Logical volume ---
      LV Path                /dev/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
      LV Name                brick_93655a762cc3c2750aab395d7bb348a9
@@ -615,7 +591,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Read ahead sectors     auto
      - currently set to     8192
      Block device           253:6
-     
+   
    ## 节点二 glusterfs-node-1
    # 查看节点创建出的pv
    [root@glusterfs-node-1 ~]# pvdisplay 
@@ -629,7 +605,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Free PE               50649
      Allocated PE          518
      PV UUID               Xp02Bf-f3yP-ckuX-lwI3-hrYm-eDU8-4Ecn20
-      
+   
    # 查看节点创建出的vg
    [root@glusterfs-node-1 ~]# vgdisplay 
      --- Volume group ---
@@ -652,7 +628,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Alloc PE / Size       518 / 2.02 GiB
      Free  PE / Size       50649 / <197.85 GiB
      VG UUID               kKhfyk-is0P-RiAk-N1Vo-C3Dl-7VcE-1sUhCo
-      
+   
    # 查看节点创建出的lv
    [root@glusterfs-node-1 ~]# lvdisplay 
      --- Logical volume ---
@@ -674,7 +650,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Read ahead sectors     auto
      - currently set to     8192
      Block device           253:4
-      
+   
      --- Logical volume ---
      LV Path                /dev/vg_dd8b89e3ac92e364871ad1a288e089be/brick_b2c873001bcc768acecd63e970683e47
      LV Name                brick_b2c873001bcc768acecd63e970683e47
@@ -730,7 +706,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Alloc PE / Size       518 / 2.02 GiB
      Free  PE / Size       50649 / <197.85 GiB
      VG UUID               FuCeOh-IqNy-dkbf-sito-UADP-24TV-gPCUTp
-      
+   
    # 查看节点创建出的lv
    [root@glusterfs-node-2 ~]# lvdisplay   
      --- Logical volume ---
@@ -752,7 +728,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Read ahead sectors     auto
      - currently set to     8192
      Block device           253:4
-      
+   
      --- Logical volume ---
      LV Path                /dev/vg_7fbd09414aeebd8c7a2415172089ee6d/brick_f8b1b01bcd77125b7d17f2d78b744692
      LV Name                brick_f8b1b01bcd77125b7d17f2d78b744692
@@ -773,10 +749,8 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
      Block device           253:6
    ```
 
-   
-
 4. **删除测试卷**
-
+   
    ```shell
    [root@glusterfs-node-0 ~]# heketi-cli volume delete 4e6a0c0cdd8a4457cee30a2bb50c8dd5
    Volume 4e6a0c0cdd8a4457cee30a2bb50c8dd5 deleted
@@ -792,8 +766,6 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
    tmpfs                    200M     0  200M   0% /run/user/0
    ```
 
-   
-
 ## 5. k8s集群对接GlusterFs(命令行和KubeSphere图形化)
 
 ### 1. k8s命令行手动配置
@@ -804,11 +776,9 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 
 **此步骤可以忽略，ansible初始化时已安装**
 
-  ```shell
-  [root@ks-k8s-master-0 ~]#  yum install glusterfs-fuse -y
-  ```
-
-
+```shell
+[root@ks-k8s-master-0 ~]#  yum install glusterfs-fuse -y
+```
 
 > **02-创建heketi使用的Secret的认证密码**
 
@@ -842,8 +812,6 @@ NAME            TYPE                      DATA   AGE
 heketi-secret   kubernetes.io/glusterfs   1      16s
 ```
 
-
-
 > **03-创建StorageClass**
 
 ```shell
@@ -876,7 +844,7 @@ glusterfs         kubernetes.io/glusterfs   Delete          Immediate           
 local (default)   openebs.io/local          Delete          WaitForFirstConsumer   false                  142m
 ```
 
-- **parameters.resturl: ** heketi服务的地址
+- **parameters.resturl:** heketi服务的地址
 - **parameters.clusterid:** 在heketi节点使用heketi-cli cluster list命令返回的集群id
 - **parameters.restuser:**  heketi.json配置文件中创建的用户名，默认admin
 - **parameters.secretName:** k8s中Secret资源定义中的metadata.name
@@ -919,8 +887,6 @@ heketi-pvc   Bound    pvc-019107e4-8cb1-44a7-940e-2ab2aecb1eac   1Gi        RWO 
   NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
   heketi-pvc   Pending                                      glusterfs      6m38s
   ```
-
-  
 
 > **05-创建测试Pod挂载pvc**
 
@@ -982,8 +948,6 @@ tmpfs                    15.7G         0     15.7G   0% /proc/scsi
 tmpfs                    15.7G         0     15.7G   0% /sys/firmware 
 ```
 
-
-
 > **06-存储服务器测查看**
 
 ```shell
@@ -1029,7 +993,7 @@ Snapshot Factor: 1.00
   Read ahead sectors     auto
   - currently set to     8192
   Block device           253:4
-   
+
   --- Logical volume ---
   LV Path                /dev/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_f16c9f2207b3cd3db901f4a801823079
   LV Name                brick_f16c9f2207b3cd3db901f4a801823079
@@ -1049,8 +1013,6 @@ Snapshot Factor: 1.00
   - currently set to     8192
   Block device           253:6
 ```
-
-
 
 > **07-清理测试资源**
 
@@ -1074,46 +1036,43 @@ secret "heketi-secret" deleted
 
 - 平台管理->集群管理->配置->保密字典
 
-  
+<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-plat.png" alt="kube-plat" style="zoom:50%;" />
 
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-plat.png" alt="kube-plat" style="zoom:50%;" />
+<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-cluster.png" alt="kube-cluster" style="zoom:50%;" />
 
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-cluster.png" alt="kube-cluster" style="zoom:50%;" />
+<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-conf.png" alt="kube-conf" style="zoom:50%;" />
 
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-conf.png" alt="kube-conf" style="zoom:50%;" />
-
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-secrets.png" alt="kube-secrets" style="zoom:50%;" />
+<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-secrets.png" alt="kube-secrets" style="zoom:50%;" />
 
 - 创建
-
+  
   - 名称：heketi-secret
-
+  
   - 项目：kube-system
-
+  
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-0.png" alt="kube-glusterfs-secrets-0" style="zoom:50%;" />
 
 - 数据设置，类型选择Opaque-> 添加数据->创建
-
+  
   - 键：key
   - 值：YWRtaW5AUEBzc1cwcmQ=
   
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-1.png" alt="kube-glusterfs-secrets-1" style="zoom:50%;" />
-
+  
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-2.png" alt="kube-glusterfs-secrets-2" style="zoom:50%;" />
   
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-3.png" alt="kube-glusterfs-secrets-3" style="zoom:50%;" />
 
-
-
 > **02-创建存储类型**
 
 - 平台管理-> 存储->存储类型->创建
-
+  
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-0.png" alt="kube-glusterfs-storageclasses-0" style="zoom:50%;" />
-
+  
   <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-1.png" alt="kube-glusterfs-storageclasses-1" style="zoom:50%;" />
 
 - 创建存储类型
+  
   - 存储名称：glusterfs
   - 存储类型：glusterfs
   - 创建存储类型的详细信息
@@ -1144,8 +1103,6 @@ secret "heketi-secret" deleted
 
 <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-6.png" alt="kube-glusterfs-storageclasses-6" style="zoom:50%;" />
 
-
-
 > **03-创建存储卷进行测试**
 
 - 平台管理->存储->存储卷
@@ -1174,7 +1131,7 @@ secret "heketi-secret" deleted
 <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-5.png" alt="kube-glusterfs-pvc-5" style="zoom:50%;" />
 
 - 尝试解决
-
+  
   - 查看存储卷配置，发现都是大写，怀疑是否是参数名称的问题，尝试按手工配置的参数修改，结果修改报错
 
 <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-6.png" alt="kube-glusterfs-pvc-6" style="zoom:50%;" />
@@ -1185,11 +1142,7 @@ secret "heketi-secret" deleted
 
 <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-9.png" alt="kube-glusterfs-pvc-9" style="zoom:50%;" />
 
-
-
 ## 6. 常见问题
-
-
 
 > **01-创建集群时报错解决办法**
 
@@ -1228,7 +1181,7 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 > **02-创建pvc时，状态为pending**
 
 - 现象
-
+  
   ```shell
   [root@ks-k8s-master-0 glusterfs]# kubectl get pvc -o wide
   NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
@@ -1250,24 +1203,20 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
     Type     Reason              Age                   From                         Message
     ----     ------              ----                  ----                         -------
     Warning  ProvisioningFailed  22s (x10 over 6m18s)  persistentvolume-controller  Failed to provision volume with StorageClass "glusterfs": failed to create volume: failed to create volume: see kube-controller-manager.log for details
-  
-  
   ```
 
+```
 - 解决方案
 
-  ```shell
-  # 1.heketi服务器地址错误，可以使用curl http://192.168.9.95:48080/hello测试,如果不同检查配置文件heketi-storageclass.yaml，检查网络
-  
-  [root@ks-k8s-master-0 ~]# curl http://192.168.9.95:48080/hello
-  Hello from Heketi
-  
-  # 2.时间不同步,会有如下log，同步k8s和GlusterFS服务器的时间
-  Apr  3 15:18:21 glusterfs-node-0 heketi: [jwt] ERROR 2022/04/03 15:18:21 heketi/middleware/jwt.go:73:middleware.(*HeketiJwtClaims).Valid: iat validation failed: Token used before issued, time now: 2022-04-03 15:18:21 +0800 CST, time issued: 2022-04-03 15:35:02 +0800 CST
-  
-  ```
+```shell
+# 1.heketi服务器地址错误，可以使用curl http://192.168.9.95:48080/hello测试,如果不同检查配置文件heketi-storageclass.yaml，检查网络
 
-  
+[root@ks-k8s-master-0 ~]# curl http://192.168.9.95:48080/hello
+Hello from Heketi
+
+# 2.时间不同步,会有如下log，同步k8s和GlusterFS服务器的时间
+Apr  3 15:18:21 glusterfs-node-0 heketi: [jwt] ERROR 2022/04/03 15:18:21 heketi/middleware/jwt.go:73:middleware.(*HeketiJwtClaims).Valid: iat validation failed: Token used before issued, time now: 2022-04-03 15:18:21 +0800 CST, time issued: 2022-04-03 15:35:02 +0800 CST
+```
 
 ## 7. 总结
 
@@ -1276,8 +1225,6 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 > **01-遗留问题**
 
 图形化对接GlusterFS失败，问题有待解决。
-
-
 
 > **参考文档**
 
