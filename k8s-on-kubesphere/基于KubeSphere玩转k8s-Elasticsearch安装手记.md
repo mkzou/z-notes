@@ -1,12 +1,12 @@
-# 基于KubeSphere玩转k8s-ElasticSearch安装手记
+# 基于 KubeSphere 玩转 k8s-ElasticSearch 安装手记
 
-**大家好，我是老Z！**
+**大家好，我是老 Z！**
 
 > 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
 >
 > 如果你喜欢本文，请分享给你的小伙伴！
 
-**本系列文档内容涵盖(但不限于)以下技术领域：**
+**本系列文档内容涵盖 (但不限于) 以下技术领域：**
 
 > - **KubeSphere**
 >
@@ -16,29 +16,37 @@
 >
 > - **自动化运维**
 >
-> - **CNCF技术栈**
-
-
+> - **CNCF 技术栈**
 
 ## 1. 本文简介
 
-本文接着上篇 **<<基于KubeSphere玩转k8s-KubeSphere初始化手记>>** ，继续玩转KubeSphere、玩转k8s。本文会介绍KubeSphere启用可插拔组件日志系统的安装和配置过程，由于采用了Kubernetes集群外部的ElasticSearch集群作为日志收集系统，因此，还会本文还会涉及ElasticSearch的安装配置的实践。为了让读者不仅能掌握ElasticSearch手工安装部署的技能，同时也能get到如何将手工安装部署文档转化成Ansible的Plaobooks，因此本文同时介绍了纯手工安装配置ElasticSearch和利用Ansible自动化安装配置ElasticSearch。
+本文接着上篇 **<< 基于 KubeSphere 玩转 k8s-KubeSphere 初始化手记 >>** ，继续玩转 KubeSphere、玩转 k8s。本文会介绍 KubeSphere 启用可插拔组件日志系统的安装和配置过程，由于采用了 Kubernetes 集群外部的 ElasticSearch 集群作为日志收集系统，因此，本文还会涉及 ElasticSearch 安装配置的实践。为了让大家不仅能掌握 ElasticSearch 手工安装部署的技能，同时也能 Get 到如何将手工安装部署文档转化成 Ansible 的 Playbooks，因此本文同时介绍了纯手工安装配置 ElasticSearch 和利用 Ansible 自动化安装配置 ElasticSearch。
+
+> **本文知识量**
+
+- 阅读时长：60 分
+- 行：4000+
+- 单词：25000+
+- 字符：220000+
+- 图片：50 张
 
 > **本文知识点**
 
 - 定级：**入门级**
 - ElasticSearch-手工安装配置
-- ElasticSearch-Ansible自动安装配置
-- ElasticSearch-启用http认证配置
-- KubeSphere启用可插拔日志组件
-- KubeSphere对接外部不开启认证的ElasticSearch
-- KubeSphere对接外部开启认证的ElasticSearch
+- ElasticSearch-Ansible 自动安装配置
+- ElasticSearch-启用 http 认证配置
+- KubeSphere 启用可插拔日志组件
+- KubeSphere 对接外部不开启认证的 ElasticSearch
+- KubeSphere 对接外部开启认证的 ElasticSearch
+- Ansible 常用操作
+- Ansible Playbook编写
 
 > **演示服务器配置**
 
 |      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘  |               用途               |
 | :--------------: | :----------: | :--: | :--: | :----: | :-----: | :------------------------------: |
-|  zdeops-master   | 192.168.9.9  |  2   |  4   |   40   |   200   |       Ansible运维控制节点        |
+|  zdeops-master   | 192.168.9.9  |  2   |  4   |   40   |   200   |       Ansible 运维控制节点        |
 | ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |   200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |   200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |   200   | KubeSphere/k8s-master/k8s-worker |
@@ -46,11 +54,11 @@
 | glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   | 200+100 |     GlusterFS/ElasticSearch      |
 | glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   | 200+100 |     GlusterFS/ElasticSearch      |
 
-## 2. Ansible配置
+## 2. Ansible 配置
 
-### 01. 增加hosts配置
+### 01. 增加 hosts 配置
 
-**本系列文档中演示用的ElasticSearch和GlusterFS服务器复用，有条件的用户可以分开部署，注意调整hosts配置**
+**本系列文档中演示用的 ElasticSearch 和 GlusterFS 服务器复用，有条件的用户可以分开部署，注意调整 hosts 配置。**
 
 ```yaml
 # hosts文件配置
@@ -82,16 +90,14 @@ ansible_ssh_user=root
 ansible_ssh_pass=password
 ```
 
-
-
-## 3. ElasticSearch安装配置
+## 3. ElasticSearch 安装配置
 
 ### 01. 初始化配置
 
 > **01-检测服务器连通性**
 
 ```shell
-# 利用ansible检测服务器的连通性
+# 利用 ansible 检测服务器的连通性
 [root@zdevops-master /]# cd /data/ansible/ansible-zdevops/inventories/dev/
 [root@zdevops-master dev]# source /opt/ansible2.8/bin/activate
 (ansible2.8) [root@zdevops-master dev]# ansible -m ping es 
@@ -113,7 +119,7 @@ es-node-0 | SUCCESS => {
 
 > **02-初始化服务器配置**
 
-**由于是复用的服务器，在GlusterFS安装配置时已经配置，因此本文忽略，实际中可根据需要执行以下命令**
+**由于是复用的服务器，在 GlusterFS 安装配置时已经配置，因此本文忽略，实际中可根据需要执行以下命令**。
 
 ```shell
 # 利用ansible-playbook初始化服务器配置
@@ -122,11 +128,11 @@ es-node-0 | SUCCESS => {
 
 > **03-挂载数据盘**
 
-**本文新增一块硬盘/dev/sdc, 格式化后挂载点为/data，作为ElasticSearch的数据存储目录，实际中请注意修改ansible-playbook的变量配置**
+**本文新增一块硬盘 /dev/sdc, 格式化后挂载点为 /data，作为 ElasticSearch 的数据存储目录，实际中请注意修改 ansible-playbook 的变量配置**。
 
 ```shell
 # 由于是采用的虚拟机，在虚拟化上挂载磁盘后，先检查一下磁盘是否被操作系统识别
-# 利用ansible查看磁盘列表
+# 利用 ansible 查看磁盘列表
 
 (ansible2.8) [root@zdevops-master dev]# ansible es -m shell -a 'fdisk -l'
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
@@ -477,7 +483,7 @@ es-node-2                  : ok=3    changed=3    unreachable=0    failed=0    s
 > **04-验证数据盘的挂载**
 
 ```shell
-# 利用ansible验证数据盘是否格式化并挂载
+# 利用 ansible 验证数据盘是否格式化并挂载
 (ansible2.8) [root@zdevops-master dev]# ansible es -m shell -a 'df -h'
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
   from cryptography.exceptions import InvalidSignature
@@ -514,7 +520,7 @@ tmpfs                    2.0G     0  2.0G   0% /sys/fs/cgroup
 tmpfs                    396M     0  396M   0% /run/user/0
 /dev/sdc1                100G   33M  100G   1% /data
 
-# 利用ansible验证数据盘是否配置自动挂载
+# 利用 ansible 验证数据盘是否配置自动挂载
 (ansible2.8) [root@zdevops-master dev]# ansible es -m shell -a 'tail -1  /etc/fstab'
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
   from cryptography.exceptions import InvalidSignature
@@ -529,13 +535,11 @@ es-node-0 | CHANGED | rc=0 >>
 
 ```
 
-
-
-### 02. ElasticSearch安装配置-手工安装配置
+### 02. ElasticSearch 安装配置-手工安装配置
 
 **以下配置如无特殊说明，所有节点都要执行**
 
-> **01-配置yum源**
+> **01-配置 yum 源**
 
 ```shell
 [root@es-node-0 ~]# vi /etc/yum.repos.d/elasticsearch.repo
@@ -547,15 +551,16 @@ gpgcheck=1
 enable=1
 ```
 
-> **02-安装ElasticSearch**
+> **02-安装 ElasticSearch**
 
 ```shell
 [root@es-node-0 ~]# yum install  elasticsearch -y
 ```
 
->  **03-创建elasticsearch配置文件**
+> **03-创建 elasticsearch 配置文件**
 
 ```shell
+# 先备份初始的配置文件(运维必备习惯)
 [root@es-node-0 ~]# cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak
 
 [root@es-node-0 ~]# vi /etc/elasticsearch/elasticsearch.yml
@@ -576,7 +581,7 @@ xpack.security.transport.ssl.keystore.path: cert/es-node-0.p12	#证书路径
 xpack.security.transport.ssl.truststore.path: cert/es-node-0.p12	#证书路径
 ```
 
-> **04-创建elasticsearch数据文件目录**
+> **04-创建 elasticsearch 数据文件目录**
 
 ```shell
 [root@es-node-0 ~]# mkdir -p /data01/elasticsearch
@@ -587,7 +592,7 @@ xpack.security.transport.ssl.truststore.path: cert/es-node-0.p12	#证书路径
 [root@es-node-0 ~]# chown -R elasticsearch.elasticsearch /etc/elasticsearch/cert/
 ```
 
->  **05-生成 instances文件用来配置证书-开启认证可选配置(需要在节点1中执行)**
+> **05-生成 instances 文件用来配置证书-开启认证可选配置 (在节点 1 中执行)**
 
 ```shell
 # 在节点1中执行
@@ -605,7 +610,7 @@ instances:
       - "192.168.2.141"
 ```
 
->  **06-生成证书-开启认证可选配置(在节点1中执行)**
+> **06-生成证书-开启认证可选配置 (在节点 1 中执行)**
 
 ```shell
 [root@es-node-0 ~]# /usr/share/elasticsearch/bin/elasticsearch-certutil cert --silent --in /etc/elasticsearch/elasticsearch-instances.yml --out /etc/elasticsearch/elasticsearch-instances.zip --pass VD41fXmOvp5hGlPc  #这是密码（在接下来是需要使用的）
@@ -623,23 +628,23 @@ instances:
 [root@es-node-0 ~]# scp -r es-node-2/es-node-2.p12 root@192.168.9.97:/etc/elasticsearch/cert/
 ```
 
-> **07-配置keystore-开启认证可选配置**
+> **07-配置 keystore-开启认证可选配置**
 
 ```shell
 # 生成 keystore 文件
 [root@es-node-0 ~]# /usr/share/elasticsearch/bin/elasticsearch-keystore create
 
-# 添加配置项到keystore文件
+# 添加配置项到 keystore 文件
 # 下面两个命令，均需要输入生成证书命令中使用的的密码
 [root@es-node-0 ~]# /usr/share/elasticsearch/bin/elasticsearch-keystore add xpack.security.transport.ssl.keystore.secure_password
 [root@es-node-0 ~]# /usr/share/elasticsearch/bin/elasticsearch-keystore add xpack.security.transport.ssl.truststore.secure_password
 
 # 创建用户
-# -r指定权限superuser超级权限
+# -r指定权限 superuser 超级权限
 [root@es-node-0 ~]# /usr/share/elasticsearch/bin/elasticsearch-users useradd lstack -p P@88w0rd -r superuser   
 ```
 
-> **08-启动并设置开机自动启动elasticsearch服务**
+> **08-启动并设置开机自动启动 elasticsearch 服务**
 
 ```shell
 [root@es-node-0 ~]# systemctl enable elasticsearch && systemctl start  elasticsearch
@@ -648,25 +653,23 @@ instances:
 > **09-测试访问**
 
 ```shell
-# ElasticSearch不开启认证
+# ElasticSearch 不开启认证
 (ansible2.8) [root@zdevops-master dev]#  curl 192.168.9.95:9200/_cat/nodes?
 192.168.9.97 49 69 6 0.03 0.29 0.21 cdfhilmrstw * es-node-2
 192.168.9.95 26 73 3 0.04 0.13 0.14 cdfhilmrstw - es-node-0
 192.168.9.96 37 66 4 0.01 0.10 0.11 cdfhilmrstw - es-node-1
 
-# ElasticSearch开启认证
+# ElasticSearch 开启认证
 (ansible2.8) [root@zdevops-master dev]#  curl -ulstack:'P@88w0rd' 192.168.9.95:9200/_cat/nodes?
 192.168.9.97 49 69 6 0.03 0.29 0.21 cdfhilmrstw * es-node-2
 192.168.9.95 26 73 3 0.04 0.13 0.14 cdfhilmrstw - es-node-0
 192.168.9.96 37 66 4 0.01 0.10 0.11 cdfhilmrstw - es-node-1
 ```
 
-
-
-### 03. ElasticSearch安装配置-Ansible自动安装配置
+### 03. ElasticSearch 安装配置-Ansible 自动安装配置
 
 ```shell
-# 利用ansible-playbook自动化安装配置ElasticSearch
+# 利用 ansible-playbook 自动化安装配置 ElasticSearch
 (ansible2.8) [root@zdevops-master dev]# ansible-playbook ../../playbooks/deploy-elasticsearch.yaml 
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
   from cryptography.exceptions import InvalidSignature
@@ -753,13 +756,12 @@ es-node-2                  : ok=10   changed=9    unreachable=0    failed=0    s
 
 ```
 
-
-
-### 04. ElasticSearch常用运维命令
+### 04. ElasticSearch 常用运维命令
 
 ```shell
 # 查看服务状态
 systemctl status elasticsearch.service
+
 # 启动服务
 systemctl start elasticsearch.service
 
@@ -776,21 +778,19 @@ journalctl -u elasticsearch.service
 /var/log/elasticsearch
 ```
 
-### 05. ElasticSearch调优
+### 05. ElasticSearch 调优
 
-**暂未调优，后续补齐**
+**暂未调优，后续再补**
 
-
-
-## 4. KubeSphere配置
+## 4. KubeSphere 配置
 
 本文后面的内容是一篇略显冗余的长文，之所以出现这个情况，是因为我自己配置疏忽导致的，具体疏忽在哪里下面到了具体环节的时候有重点标注。为了保留故事的完整性我后面就将错就错了，给大家展示了我排查故障、发现错误、改正错误的全流程。
 
-### 01. 开启KubeSphere日志系统可插拔组件
+### 01. 开启 KubeSphere 日志系统可插拔组件
 
-1. 编辑**CRD**中的**ks-installer**的YAML配置文件
+1. 编辑 **CRD** 中的 **ks-installer** 的 YAML 配置文件。
 
-   - 在YAML文件中，搜索 **logging,auditing,events**，并将**enabled**的**false** 改为 **true**。
+   - 在 YAML 文件中，搜索 **logging,auditing,events**，并将 **enabled** 的 **false** 改为 **true**。
 
    - ```yaml
      logging:
@@ -799,15 +799,15 @@ journalctl -u elasticsearch.service
        logsidecar:
          enabled: true
          replicas: 2
-     
+  
      events:
        enabled: true
-     
+  
      auditing:
        enabled: true
      ```
 
-   - 在YAML文件中，搜索 **es**，将**enabled**的**false** 改为 **true**。并修改外部的es服务器的信息
+   - 在 YAML 文件中，搜索 **es**，将 **enabled** 的 **false** 改为 **true**。并修改外部的 es 服务器的信息。
 
    - ```yaml
      es:
@@ -834,10 +834,10 @@ journalctl -u elasticsearch.service
    - ```yaml
      TASK [ks-core/prepare : KubeSphere | Generating kubeconfig-admin] **************
      skipping: [localhost]
-     
+  
      PLAY RECAP *********************************************************************
      localhost                  : ok=26   changed=14   unreachable=0    failed=0    skipped=12   rescued=0    ignored=0
-     
+  
      Start installing monitoring
      Start installing multicluster
      Start installing openpitrix
@@ -863,11 +863,11 @@ journalctl -u elasticsearch.service
      #####################################################
      ###              Welcome to KubeSphere!           ###
      #####################################################
-     
+  
      Console: http://192.168.9.91:30880
      Account: admin
      Password: P@88w0rd
-     
+  
      NOTES：
        1. After you log into the console, please check the
           monitoring status of service components in
@@ -875,13 +875,13 @@ journalctl -u elasticsearch.service
           ready, please wait patiently until all components
           are up and running.
        2. Please change the default password after login.
-     
+  
      #####################################################
      https://kubesphere.io             2022-04-15 11:54:50
      #####################################################
      ```
 
-4. 验证安装结果
+4. 验证安装结果。
 
    > **01-日志系统组件**
 
@@ -891,7 +891,7 @@ journalctl -u elasticsearch.service
    - 点击右下角的**工具箱**按钮，多出几个分析工具的菜单
    - ![kubesphere-clusters-components-logging-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-clusters-components-logging-2.png)
 
-   - 在kubectl工具中查看
+   - 在 kubectl 工具中查看。
 
    - ```shell
      / # kubectl get pod -n kubesphere-logging-system
@@ -915,14 +915,14 @@ journalctl -u elasticsearch.service
 
    - 上面的验证，表面上看日志系统是配置成功了，但是实际上还是存在问题的，接下来我们继续深入验证。
 
-   - 点击**工具箱**中的**容器日志查询**，会出现如下报错，说明我们的es对接并没有成功。
+   - 点击**工具箱**中的**容器日志查询**，会出现如下报错，说明我们的 es 对接并没有成功。
 
    - ![kubesphere-logging-error-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-logging-error-1.png)
 
-   - 执行以下命令查看Output的配置，发现几个重要参数并没有变成我们想要的结果
+   - 执行以下命令查看 Output 的配置，发现几个重要参数并没有变成我们想要的结果
 
    - ```shell
-     / # kubectl get output -n kubesphere-logging-system es -oyaml
+     / # kubectl get output -n kubesphere-logging-system es -o yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Output
      metadata:
@@ -949,22 +949,22 @@ journalctl -u elasticsearch.service
        matchRegex: (?:kube|service)\.(.*)
      ```
 
-   - 也可以在KubeSphere控制台中查看Output的配置
+   - 也可以在 KubeSphere 控制台中查看 Output 的配置。
 
-   - 登录控制台，在**集群管理**->**CRD**中, 搜索output
-   
+   - 登录控制台，在**集群管理**->**CRD** 中 , 搜索 output。
+
    - ![kubesphere-crd-output](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-output.png)
-   
-   - 点击**Output**，进入Output详情页，会发现有**es**、**es-auditing**、**es-events**三种资源
-   
+
+   - 点击 **Output**，进入 Output 详情页，会发现有 **es**、**es-auditing**、**es-events** 三种资源。
+
    - ![kubesphere-crd-output-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-output-1.png)
-   
-   - 编辑**es**的YAML配置（点击右侧的三个竖点的图标，会弹出编辑YAML的选项），可以看到配置文件跟我们命令行输出的结果一致。
-   
+
+   - 编辑 **es** 的 YAML 配置（点击右侧的三个竖点的图标，会弹出编辑 YAML 的选项），可以看到配置文件跟我们命令行输出的结果一致。
+
    - ![kubesphere-crd-output-es-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-output-es-1.png)
-   
-   - 查看fluent-bit容器
-   
+
+   - 查看 fluent-bit 容器。
+
    - ```shell
      / # kubectl get pods -n kubesphere-logging-system 
      NAME                                            READY   STATUS    RESTARTS   AGE
@@ -982,9 +982,9 @@ journalctl -u elasticsearch.service
      logsidecar-injector-deploy-5fb6fdc6dd-fv8vg     2/2     Running   0          3h32m
      logsidecar-injector-deploy-5fb6fdc6dd-fxsbf     2/2     Running   0          3h32m
      ```
-   
-   - 查看pod的log，也会发现大量的错误日志。
-   
+
+   - 查看 pod 的 log，也会发现大量的错误日志。
+
    - ```yaml
      / # kubectl logs  fluent-bit-j5rvq -n kubesphere-logging-system 
      
@@ -993,14 +993,14 @@ journalctl -u elasticsearch.service
      
       [2022/04/15 07:25:47] [ warn] [engine] failed to flush chunk '12-1650007543.816834850.flb', retry in 6 seconds: task_id=2, input=tail.2 > output=es.0 (out_id=0)
      ```
-   
-     
 
-### 02. 外部ElasticSearch配置失败的解决过程
+### 02. 外部 ElasticSearch 配置失败的解决过程
 
-1. 查找官方论坛，关键词使用**外部es**找到了以下一篇看着比较接近的文档，打开来看看。
+下面我们想办法解决上面配置异常的问题。
 
-   - > [3.2.1版本日志系统对接外部ES无法正常收集日志](https://kubesphere.com.cn/forum/d/6455-321es)
+1. 查找官方论坛，关键词使用**外部 es** 找到了以下一篇看着比较接近的文档，打开来看看。
+
+   - > [3.2.1 版本日志系统对接外部 ES 无法正常收集日志](https://kubesphere.com.cn/forum/d/6455-321es)
 
    - ![elasticsearch-error-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/elasticsearch-error-1.png)
 
@@ -1008,32 +1008,33 @@ journalctl -u elasticsearch.service
 
    - ![image-20220420095405948](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420095405948.png)
 
-   - 跳转到[第一个参考链接](https://kubesphere.io/zh/docs/faq/observability/logging/#%E5%A6%82%E4%BD%95%E5%B0%86%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E6%94%B9%E4%B8%BA%E5%A4%96%E9%83%A8-elasticsearch-%E5%B9%B6%E5%85%B3%E9%97%AD%E5%86%85%E9%83%A8-elasticsearch)
+   - 跳转到[第一个参考链接](https://kubesphere.io/zh/docs/faq/observability/logging/#%E5%A6%82%E4%BD%95%E5%B0%86%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E6%94%B9%E4%B8%BA%E5%A4%96%E9%83%A8-elasticsearch-%E5%B9%B6%E5%85%B3%E9%97%AD%E5%86%85%E9%83%A8-elasticsearch)。
 
-   - 第一个参考链接里，有一节**如何将日志存储改为外部 Elasticsearch 并关闭内部 Elasticsearch**,看了一遍就是介绍如何开启外部es的配置，跟我们之前在界面上编辑**ClusterConfiguration**是一样的。
+   - 第一个参考链接里，有一节**如何将日志存储改为外部 Elasticsearch 并关闭内部 Elasticsearch**, 看了一遍就是介绍如何开启外部 es 的配置，跟我们之前在界面上编辑 **ClusterConfiguration** 是一样的。
 
-   - 但是第一个他这一步介绍里手工重新执行**ks-installer**的方法，我就假设我界面修改了配置，但是**ks-installer**没重新执行（实际上肯定已经执行了），我在手工执行一次。
+   - 但是第一个他这一步介绍了手工重新执行 **ks-installer** 的方法，我就假设我界面修改了配置，但是 **ks-installer** 没重新执行（实际上肯定已经执行了），我在手工执行一次。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl rollout restart deploy -n kubesphere-system ks-installer
      deployment.apps/ks-installer restarted
+     
      [root@ks-k8s-master-0 ~]# kubectl rollout status deploy -n kubesphere-system ks-installer
      deployment "ks-installer" successfully rolled out
      ```
-
+     
    - 然后发现并没有什么改变，问题依旧。
 
-   - 跳转到[第二个参考链接](https://github.com/wenchajun/ks-installer/blob/master/roles/ks-logging/templates/custom-output-elasticsearch-logging.yaml.j2)，这里是告诉我们手工修改的配置方式，暂时先不考虑，总感觉很多人遇到了，肯定有更好的方案，我们继续看论坛帖子
+   - 跳转到[第二个参考链接](https://github.com/wenchajun/ks-installer/blob/master/roles/ks-logging/templates/custom-output-elasticsearch-logging.yaml.j2)，这里是告诉我们手工修改的配置方式，暂时先不考虑，总感觉很多人遇到了，肯定有更好的方案，我们继续看论坛帖子。
 
-   - 然后我在刚才的搜索结果中找到了[外部es无法正常收集日志](https://kubesphere.com.cn/forum/d/6590-es/3)，这篇文档的最后那兄弟说参考[github的文档](https://github.com/kubesphere/kubesphere/issues/4640)解决了问题，那我们去试试.
+   - 然后我在刚才的搜索结果中找到了[外部 es 无法正常收集日志](https://kubesphere.com.cn/forum/d/6590-es/3)，这篇文档的最后那兄弟说参考[github 的文档](https://github.com/kubesphere/kubesphere/issues/4640)解决了问题，那我们去试试 .
 
    - ![image-20220420103039813](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420103039813.png)
 
-   - 该解决方案中也是修改配置文件，但是有一点，需要删掉配置文件中原来的es相关的status配置后，再次重新执行ks-installer
+   - 该解决方案中也是修改配置文件，但是有一点，需要删掉配置文件中原来的 es 相关的 status 配置后，再次重新执行 ks-installer
 
    - ![image-20220420103344968](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420103344968.png)
 
-   - 既然有这一段话 那么我们去看看我们实际环境的配置,但是我们的环境中并没有es的配置，因为我们最早的时候就没有启用内置的es服务。
+   - 既然有这一段话 那么我们去看看我们实际环境的配置 , 但是我们的环境中并没有 es 的配置，因为我们最早的时候就没有启用内置的 es 服务。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl edit cc -n kubesphere-system ks-installer
@@ -1049,9 +1050,9 @@ journalctl -u elasticsearch.service
        status: enabled
      ```
 
-   - 但是啊，本着宁杀错的原则，那我们删了这几段试试看看，重新执行**ks-installer**，看看效果。
+   - 但是啊，本着宁杀错的原则，那我们删了这几段试试看看，重新执行 **ks-installer**，看看效果。
 
-   - 执行下面的命令，查看安装过程，确实开始了重新配置的过程（过程没截图,截取了几个相近的配置过程）
+   - 执行下面的命令，查看安装过程，确实开始了重新配置的过程（过程没截图 , 截取了几个相近的配置过程）
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath='{.items[0].metadata.name}') -f
@@ -1091,7 +1092,7 @@ journalctl -u elasticsearch.service
      
      ```
 
-   - 等到彻底执行完成后，我发现我又失望了，问题依旧,看了一眼Output的配置，没啥变化。
+   - 等到彻底执行完成后，我发现我又失望了，问题依旧 , 看了一眼 Output 的配置，没啥变化。
 
    - ```shell
      [root@ks-k8s-master-0 ~]#  kubectl get output -n kubesphere-logging-system es -oyaml
@@ -1121,17 +1122,17 @@ journalctl -u elasticsearch.service
        matchRegex: (?:kube|service)\.(.*)
      ```
 
-   - 看来上面提到的方法，应该可能只适用于**原来开启过内置es，后来又想换到外部es的场景**。
+   - 看来上面提到的方法，应该可能只适用于**原来开启过内置 es，后来又想换到外部 es 的场景**。
 
-   - 那我们继续回来看[外部es无法正常收集日志](https://kubesphere.com.cn/forum/d/6590-es/3)这篇文档，里面还提到了一个参考链接[在使用kusphere的操作审计功能时，总有弹窗提示：dial tcp: lookup http on 10.96.0.10:53: no such host](https://kubesphere.com.cn/forum/d/2450-kuspheredial-tcp-lookup-http-on-109601053-no-such-host/4).
+   - 那我们继续回来看[外部 es 无法正常收集日志](https://kubesphere.com.cn/forum/d/6590-es/3)这篇文档，里面还提到了一个参考链接[在使用 kusphere 的操作审计功能时，总有弹窗提示：dial tcp: lookup http on 10.96.0.10:53: no such host](https://kubesphere.com.cn/forum/d/2450-kuspheredial-tcp-lookup-http-on-109601053-no-such-host/4).
 
    - ![image-20220420111124760](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420111124760.png)
 
-   - 该文档中的描述跟我们的想象类似，但不完全相同，文中提到的问题可以通过修改**configmap**来解决，文章最后那哥们也说解决成功了。
+   - 该文档中的描述跟我们的现象类似，但不完全相同，文中提到的问题可以通过修改 **ConfigMap** 来解决，文章最后那哥们也说解决成功了。
 
    - ![image-20220420111152382](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420111152382.png)
 
-   - 我们看看我们对应的configmap配置
+   - 我们看看我们对应的 ConfigMap 配置。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get configmap kubesphere-config -n kubesphere-system -o yaml
@@ -1165,7 +1166,6 @@ journalctl -u elasticsearch.service
            port: 6379
            password: KUBESPHERE_REDIS_PASSWORD
            db: 0
-     
      
          s3:
            endpoint: http://minio.kubesphere-system.svc:9000
@@ -1229,7 +1229,6 @@ journalctl -u elasticsearch.service
            thanosRulerEndpoint: http://thanos-ruler-operated.kubesphere-monitoring-system.svc:10902
            thanosRuleResourceLabels: thanosruler=thanos-ruler,role=thanos-alerting-rules
      
-     
          gateway:
            watchesPath: /var/helm-charts/watches.yaml
            repository: kubesphere/nginx-ingress-controller
@@ -1247,13 +1246,13 @@ journalctl -u elasticsearch.service
        uid: 2d45c34b-bc9d-43bd-a3d3-37b294393531
      ```
 
-   - 我们发现几个相关配置的host地址确实是错的跟我们之前发现的一样，而且这里并没有明确的es配置。对于技术细节了解不深的我，直觉告诉我这个方向应该是错的，暂时不选。
+   - 我们发现几个相关配置的 host 地址确实是错的跟我们之前发现的一样，而且这里并没有明确的 es 配置。对于技术细节了解不深的我，直觉告诉我这个方向应该是错的，暂时不选。
 
-   - 排查到此时，我的心里已经烦躁不安了，搞了两个小时的我此时不想再找下去了，直接放出最后一招，去改Output文件看看。
+   - 排查到此时，我的心里已经烦躁不安了，搞了两个小时的我此时不想再找下去了，直接放出最后一招，去改 [Output](https://github.com/kubesphere/ks-installer/blob/master/roles/ks-logging/templates/custom-output-elasticsearch-logging.yaml.j2) 文件看看(我们前文介绍的论坛中一个帖子提到的)。
 
-2. 问题排查第二环节，修改Output文件
+2. 问题排查第二环节，修改 Output 文件。
 
-   - 先看看参考模板**custom-output-elasticsearch-logging.yaml.j2**的样子
+   - 先看看参考模板 **custom-output-elasticsearch-logging.yaml.j2** 的样子。
 
    - ```yaml
      apiVersion: logging.kubesphere.io/v1alpha2
@@ -1296,9 +1295,9 @@ journalctl -u elasticsearch.service
      {% endif %}
      ```
 
-   - 小伙伴们你们看懂了么，好在我有Ansible的使用经验，之前也写过Jinja2的语法，否则暴脾气的我，又要拍桌子了。没看懂的也没关系，暂时先放着，我会在本文对应的直播视频中给大家讲解具体含义。
+   - 小伙伴们你们看懂了么，好在我有 Ansible 的使用经验，之前也写过 Jinja2 的语法，否则暴脾气的我，又要拍桌子了。没看懂的也没关系，暂时先放着，我会在本文对应的直播视频中给大家讲解具体含义。
 
-   - 再来贴一次我们线上的配置
+   - 再来贴一次我们线上的配置。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es -o yaml
@@ -1328,7 +1327,7 @@ journalctl -u elasticsearch.service
        matchRegex: (?:kube|service)\.(.*)
      ```
 
-   - 通过分析模板，发现如果开启认证的话，需要调用**elasticsearch-credentials**这个secrets，所以我们先检查一下，这个secret是否存在。
+   - 通过分析模板，发现如果开启认证的话，需要调用 **elasticsearch-credentials** 这个 secrets，所以我们先检查一下，这个 secret 是否存在。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get secrets elasticsearch-credentials -n kubesphere-logging-system 
@@ -1349,7 +1348,7 @@ journalctl -u elasticsearch.service
      type: kubernetes.io/basic-auth
      ```
 
-   - 确认secrets存在，接下来我先把Outpt配置文件输出一份备份下来，然后再去修改配置文件。
+   - 确认 secrets 存在，接下来我先把 Outpt 配置文件输出一份备份下来，然后再去修改配置文件。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es -o yaml > es.output.yaml
@@ -1404,9 +1403,9 @@ journalctl -u elasticsearch.service
      output.logging.kubesphere.io/es edited
      ```
 
-   - 再次查看es的Output的资源配置,发现已经有变化了
+   - 再次查看 es 的 Output 的资源配置 , 发现已经有变化了
 
-     > **重点说明: 本文写到最后的时候我发现我这步就做错了,配置文件我不应该加下面的参数，不加的话到这步为止就都ok了不会再有后面的内容了，为了故事的完整性就继续按错的写了！！！**
+     > **重点说明 : 本文写到最后的时候我发现我这步就做错了 , 配置文件我不应该加下面的参数，不加的话到这步为止就都 ok 了不会再有后面的内容了，为了故事的完整性就继续按错的写了！！！**
      >
      > tls:
      >   verify: false
@@ -1451,7 +1450,7 @@ journalctl -u elasticsearch.service
        matchRegex: (?:kube|service)\.(.*)
      ```
 
-   - 我们再看看fluent-bit的日志(截取部分关键日志)
+   - 我们再看看 fluent-bit 的日志 (截取部分关键日志)
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl logs  fluent-bit-j5rvq -n kubesphere-logging-system
@@ -1553,8 +1552,6 @@ journalctl -u elasticsearch.service
       * Fluent Bit is a CNCF sub-project under the umbrella of Fluentd
      
       * https://fluentbit.io
-     
-      
      
       [2022/04/20 03:43:25] [ info] [engine] started (pid=18)
      
@@ -1663,23 +1660,21 @@ journalctl -u elasticsearch.service
       [2022/04/20 03:43:40] [ warn] [engine] failed to flush chunk '18-1650426215.131578181.flb', retry in 11 seconds: task_id=0, input=tail.2 > output=es.0 (out_id=0)
      ```
 
-   - 分析日志发现**Domain name not found**这个报错已经不存在了，说明es地址配置变更了，但是还有其他报错我们继续分析。
+   - 分析日志发现 **Domain name not found** 这个报错已经不存在了，说明 es 地址配置变更了，但是还有其他报错我们继续分析。
 
-   - 我们发现现在运行的**fluent-bit**还是5天前创建的（好吧，可以看到这个事情已经困扰了我5天了），尝试使用**重启大法**，没准pod在初始创建的时候会做什么特殊操作呢。
+   - 我们发现现在运行的 **fluent-bit** 还是 5 天前创建的（好吧，可以看到这个事情已经困扰了我 5 天了），尝试使用**重启大法**，没准 pod 在初始创建的时候会做什么特殊操作呢。
 
    - ![kubesphere-daemonsets-flunet-bit](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit.png)
 
-   - 点击**更多操作**，**重新创建**
+   - 点击**更多操作**，**重新创建**。
 
-   - 不知道为啥 只给我重建了一个，不过先不管了，先看日志
+   - 不知道为啥 只给我重建了一个，不过先不管了，先看日志。
 
    - ![kubesphere-daemonsets-flunet-bit-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-1.png)
 
-   - 重建完成后，我们看看pod的新启动的日志,发现跟刚才差不多。
+   - 重建完成后，我们看看 pod 的新启动的日志 , 发现跟刚才差不多。
 
    - ```yaml
-     容器日志
-     
       level=info msg="Fluent bit started"
      
       Fluent Bit v1.8.3
@@ -1691,8 +1686,6 @@ journalctl -u elasticsearch.service
       * Fluent Bit is a CNCF sub-project under the umbrella of Fluentd
      
       * https://fluentbit.io
-     
-      
      
       [2022/04/20 04:07:18] [ info] [engine] started (pid=15)
      
@@ -1884,22 +1877,22 @@ journalctl -u elasticsearch.service
      
       [2022/04/20 04:07:43] [ warn] [engine] chunk '15-1650427651.290039243.flb' cannot be retried: task_id=4, input=tail.2 > output=es.0
      ```
+   
+3. 问题排查第三环节，检查 fluent-bit。
 
-3. 问题排查第三环节，检查fluent-bit
-
-   - 打开百度，搜索**failed to flush chunk**
+   - 打开百度，搜索 **failed to flush chunk**。
 
    - ![image-20220420163534855](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420163534855.png)
 
-   - 搜索出来的结果，凭直觉没啥用处，真不想说啥了，直接换人
+   - 搜索出来的结果，凭直觉没啥用处，真不想说啥了，直接换人。
 
-   - 打开**Bing**，搜索**failed to flush chunk**
+   - 打开 **Bing**，搜索 **failed to flush chunk**。
 
    - ![image-20220420163607854](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420163607854.png)
 
-   - 点开[第一个参考链接](https://github.com/fluent/fluent-bit/issues/3301),看了一圈感觉就是再说需要开启一个参数**Trace_Error On**，才能看的更清楚。
+   - 点开[第一个参考链接](https://github.com/fluent/fluent-bit/issues/3301), 看了一圈感觉就是再说需要开启一个参数 **Trace_Error On**，才能看的更清楚。
 
-   - 咱先不开启，先看看fluentd-bit是否跟ES服务器有通讯，通过tcp抓包可以看到是有数据推送的
+   - 咱先不开启，先看看 fluentd-bit 是否跟 ES 服务器有通讯，通过 tcp 抓包可以看到是有数据推送的。
 
    - ```shell
      [root@glusterfs-node-0 logs]# tcpdump -i any port 9200 -s 0
@@ -1956,7 +1949,7 @@ journalctl -u elasticsearch.service
      0 packets dropped by kernel
      ```
 
-   - 查看es集群中的index是否创建,结果发现索引并没有创建。
+   - 查看 es 集群中的 index 是否创建 , 结果发现索引并没有创建。
 
    - ```shell
      [root@glusterfs-node-0 logs]# curl -ulstack:'P@88w0rd' 192.168.9.95:9200/_cat/indices?v
@@ -1964,24 +1957,24 @@ journalctl -u elasticsearch.service
      green  open   .geoip_databases jOKPAu5-S3yv0rZdZx4ufw   1   1         40           38    107.2mb         69.3mb
      ```
 
-   - 那为啥没索引呢，默认日志是看不出来的，只能开启elasticsearch日志的debug模式了
+   - 那为啥没索引呢，默认日志是看不出来的，只能开启 elasticsearch 日志的 debug 模式了
 
    - ```shell
      [root@glusterfs-node-0 logs]# curl -ulstack:'P@88w0rd' -H "Content-Type: application/json" -X PUT  192.168.9.95:9200/_cluster/settings -d '{"transient" : {"logger._root":"DEBUG"} }'
      ```
 
-   - 开启以后日志就丰富了很多，我们找找有用的信息
+   - 开启以后日志就丰富了很多，我们找找有用的信息。
 
    - ```yaml
      [2022-04-20T15:23:25,633][DEBUG][r.suppressed             ] [es-node-0] path: /bad-request, params: {}
      java.lang.IllegalArgumentException: invalid version format: <8a>-»>¸Â×YÄÌ^Y^^HR·<84>ºÞ^@ÊËD!Ô^SÄÜA<9c>EÛº^@>^S^B^S^C^S^AÀ,À0^@<9f>Ì©Ì¨ÌªÀ+À/^@<9e>À$À(^@KÀ#À'^@GÀ
-     
+  
      [2022-04-20T15:23:25,630][DEBUG][r.suppressed             ] [es-node-0] path: /bad-request, params: {}
      java.lang.IllegalArgumentException: text is empty (possibly HTTP/0.9)
-     
+  
      ```
 
-   - **DEBUG**级别的日志也就能看到这些了，再上个更狠的TRACE级别的，要是还不行就去开启**Fluent-bit**的参数。
+   - **DEBUG** 级别的日志也就能看到这些了，再上个更狠的 TRACE 级别的，要是还不行就去开启 **Fluent-bit** 的参数。
 
    - ```shell
      [root@glusterfs-node-0 logs]# curl -ulstack:'P@88w0rd' -H "Content-Type: application/json" -X PUT  192.168.9.95:9200/_cluster/settings -d '{"transient" : {"logger._root":"TRACE"} }'
@@ -1992,31 +1985,29 @@ journalctl -u elasticsearch.service
    - ```yaml
      [2022-04-20T16:50:18,577][TRACE][o.e.h.HttpTracer         ] [es-node-0] [40714][null][GET][/bad-request] received request from [Netty4HttpChannel{localAddress=/192.168.9.95:9200, remoteAddress=/192.168.9.93:34784}]
      java.lang.IllegalArgumentException: invalid version format: ¸Ñ^AÐ^E1<8b>HU^R0<88>^[)¶ËQT=<87>"}Þ¥AËÉ³ZY^@>^S^B^S^C^S^AÀ,À0^@<9f>Ì©Ì¨ÌªÀ+À/^@<9e>À$À(^@KÀ#À'^@GÀ
-     
+  
      [2022-04-20T16:50:18,549][TRACE][o.e.h.HttpTracer         ] [es-node-0] [40713][null][GET][/bad-request] received request from [Netty4HttpChannel{localAddress=/192.168.9.95:9200, remoteAddress=/192.168.9.92:49734}]
      java.lang.IllegalArgumentException: text is empty (possibly HTTP/0.9)
-     
+  
      ```
 
-   - 先把ElasticSearch的日志级别改回默认的INFO，我们回去研究**Fluent-bit**
+   - 先把 ElasticSearch 的日志级别改回默认的 INFO，我们回去研究 **Fluent-bit**。
 
    - ```shell
      [root@glusterfs-node-0 logs]# curl -ulstack:'P@88w0rd' -H "Content-Type: application/json" -X PUT  192.168.9.95:9200/_cluster/settings -d '{"transient" : {"logger._root":"INFO"} }'
      ```
 
-   - 返回KubeSphere的论坛，继续以关键字**外部es**搜索，发现一篇跟fluent bit有关的文档,[安装 日志插件后， fluent bit 启动失败，查询日志一直是0， 外部es也没有创建索引](https://kubesphere.com.cn/forum/d/5961-fluent-bit-0-es)
+   - 返回 KubeSphere 的论坛，继续以关键字**外部 es** 搜索，发现一篇跟 fluent bit 有关的文档 ,[安装 日志插件后， fluent bit 启动失败，查询日志一直是 0， 外部 es 也没有创建索引](https://kubesphere.com.cn/forum/d/5961-fluent-bit-0-es)
 
    - ![elasticsearch-error-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/elasticsearch-error-2.png)
 
-   - 该文中的fluent的报错信息跟我的不一样，先不管了，先看看他的配置跟我是否一样。https://github.com/kubesphere/kubesphere/issues/4425
+   - 该文中的 fluent 的报错信息跟我的不一样，先不管了，先看看他的配置跟我是否一样，文中解决方案跳转到了[Github](https://github.com/kubesphere/kubesphere/issues/4425)。
 
    - ![image-20220420173658602](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420173658602.png)
 
    - ![image-20220420173919350](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220420173919350.png)
 
-     
-
-   - 先看看我们有几个inputs
+   - 先看看我们有几个 inputs。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get inputs -n kubesphere-logging-system 
@@ -2028,9 +2019,9 @@ journalctl -u elasticsearch.service
      tail-events     5d5h
      ```
 
-   - 先看看我们现在的**tail**配置
+   - 先看看我们现在的 **tail** 配置。
 
-   - ```yaml
+   - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get inputs -n kubesphere-logging-system tail -o yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Input
@@ -2060,11 +2051,11 @@ journalctl -u elasticsearch.service
          tag: kube.*
      ```
 
-   - 看现在的配置，跟github上的对比，发现配置存在无需调整。
+   - 看现在的配置，跟 github 上的对比，发现配置存在无需调整。
 
-   - 再看看我们现在的**filter-auditing**配置
+   - 再看看我们现在的 **filter-auditing** 配置。
 
-   - ```yaml
+   - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get  filters -n kubesphere-logging-system filter-auditing -o yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Filter
@@ -2098,17 +2089,17 @@ journalctl -u elasticsearch.service
        match: kube_auditing
      ```
 
-   - 看现在的配置，跟github上的对比，发现配置存在无需调整。
+   - 看现在的配置，跟 Github 上的对比，发现配置存在无需调整。
 
-   - 又无路可走了。。。清醒一下脑袋，进入下一环节
+   - 又无路可走了。。。清醒一下脑袋，进入下一环节。
 
-4. 问题排查第四环节，再探Fluent-bit
+4. 问题排查第四环节，再探 Fluent-bit。
 
-   - 没其他思路了，把Fluent-bit的Trace开开吧
+   - 没其他思路了，把 Fluent-bit 的 Trace 开开吧。
 
-   - 找到我们的fluent-bit-config的ConfigMap
+   - 找到我们的 fluent-bit-config 的 ConfigMap。
 
-   - ```yaml
+   - ```shell
      [root@ks-k8s-master-0 ~]# kubectl get secrets fluent-bit-config -n kubesphere-logging-system -o yaml
      apiVersion: v1
      data:
@@ -2134,24 +2125,24 @@ journalctl -u elasticsearch.service
 
    - 居然没有明文，居然是加密的，这看个鬼啊。。。
 
-   - 不过，好在我们知道k8s里的好多字典都是base64加密的，而base64又是可以反解密的。我们解开试试
+   - 不过，好在我们知道 k8s 里的好多字典都是 base64 加密的，而 base64 又是可以反解密的。我们解开试试。
 
-   - 先把base64加密过的字符串复制下来，新建一个文件**fluent-bit-config**
+   - 先把 base64 加密过的字符串复制下来，新建一个文件 **fluent-bit-config**
 
    - ```yaml
      [root@ks-k8s-master-0 ~]# vi fluent-bit-config
      写入以下内容
-     
+  
      W1NlcnZpY2VdCiAgICBQYXJzZXJzX0ZpbGUgICAgcGFyc2Vycy5jb25mCltJbnB1dF0KICAgIE5hbWUgICAgc3lzdGVtZAogICAgUGF0aCAgICAvdmFyL2xvZy9qb3VybmFsCiAgICBEQiAgICAvZmx1ZW50LWJpdC90YWlsL2RvY2tlci5kYgogICAgREIuU3luYyAgICBOb3JtYWwKICAgIFRhZyAgICBzZXJ2aWNlLmRvY2tlcgogICAgU3lzdGVtZF9GaWx0ZXIgICAgX1NZU1RFTURfVU5JVD1kb2NrZXIuc2VydmljZQpbSW5wdXRdCiAgICBOYW1lICAgIHN5c3RlbWQKICAgIFBhdGggICAgL3Zhci9sb2cvam91cm5hbAogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9rdWJlbGV0LmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgVGFnICAgIHNlcnZpY2Uua3ViZWxldAogICAgU3lzdGVtZF9GaWx0ZXIgICAgX1NZU1RFTURfVU5JVD1rdWJlbGV0LnNlcnZpY2UKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMvKi5sb2cKICAgIEV4Y2x1ZGVfUGF0aCAgICAvdmFyL2xvZy9jb250YWluZXJzLypfa3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbV9ldmVudHMtZXhwb3J0ZXIqLmxvZywvdmFyL2xvZy9jb250YWluZXJzL2t1YmUtYXVkaXRpbmctd2ViaG9vaypfa3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbV9rdWJlLWF1ZGl0aW5nLXdlYmhvb2sqLmxvZwogICAgUmVmcmVzaF9JbnRlcnZhbCAgICAxMAogICAgU2tpcF9Mb25nX0xpbmVzICAgIHRydWUKICAgIERCICAgIC9mbHVlbnQtYml0L3RhaWwvcG9zLmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgTWVtX0J1Zl9MaW1pdCAgICA1TUIKICAgIFBhcnNlciAgICBkb2NrZXIKICAgIFRhZyAgICBrdWJlLioKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMva3ViZS1hdWRpdGluZy13ZWJob29rKl9rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtX2t1YmUtYXVkaXRpbmctd2ViaG9vayoubG9nCiAgICBSZWZyZXNoX0ludGVydmFsICAgIDEwCiAgICBTa2lwX0xvbmdfTGluZXMgICAgdHJ1ZQogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9wb3MtYXVkaXRpbmcuZGIKICAgIERCLlN5bmMgICAgTm9ybWFsCiAgICBNZW1fQnVmX0xpbWl0ICAgIDVNQgogICAgUGFyc2VyICAgIGRvY2tlcgogICAgVGFnICAgIGt1YmVfYXVkaXRpbmcKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMvKl9rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtX2V2ZW50cy1leHBvcnRlcioubG9nCiAgICBSZWZyZXNoX0ludGVydmFsICAgIDEwCiAgICBTa2lwX0xvbmdfTGluZXMgICAgdHJ1ZQogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9wb3MtZXZlbnRzLmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgTWVtX0J1Zl9MaW1pdCAgICA1TUIKICAgIFBhcnNlciAgICBkb2NrZXIKICAgIFRhZyAgICBrdWJlX2V2ZW50cwpbRmlsdGVyXQogICAgTmFtZSAgICBwYXJzZXIKICAgIE1hdGNoICAgIGt1YmVfYXVkaXRpbmcKICAgIEtleV9OYW1lICAgIGxvZwogICAgUGFyc2VyICAgIGpzb24KW0ZpbHRlcl0KICAgIE5hbWUgICAgbW9kaWZ5CiAgICBNYXRjaCAgICBrdWJlX2F1ZGl0aW5nCiAgICBDb25kaXRpb24gICAgS2V5X2RvZXNfbm90X2V4aXN0ICAgIEF1ZGl0SUQgICAgCiAgICBBZGQgICAgaWdub3JlICAgIHRydWUKW0ZpbHRlcl0KICAgIE5hbWUgICAgZ3JlcAogICAgTWF0Y2ggICAga3ViZV9hdWRpdGluZwogICAgRXhjbHVkZSAgICBpZ25vcmUgdHJ1ZQpbRmlsdGVyXQogICAgTmFtZSAgICBwYXJzZXIKICAgIE1hdGNoICAgIGt1YmVfZXZlbnRzCiAgICBLZXlfTmFtZSAgICBsb2cKICAgIFBhcnNlciAgICBqc29uCltGaWx0ZXJdCiAgICBOYW1lICAgIGt1YmVybmV0ZXMKICAgIE1hdGNoICAgIGt1YmUuKgogICAgS3ViZV9VUkwgICAgaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjOjQ0MwogICAgS3ViZV9DQV9GaWxlICAgIC92YXIvcnVuL3NlY3JldHMva3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9jYS5jcnQKICAgIEt1YmVfVG9rZW5fRmlsZSAgICAvdmFyL3J1bi9zZWNyZXRzL2t1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvdG9rZW4KICAgIExhYmVscyAgICBmYWxzZQogICAgQW5ub3RhdGlvbnMgICAgZmFsc2UKW0ZpbHRlcl0KICAgIE5hbWUgICAgbmVzdAogICAgTWF0Y2ggICAga3ViZS4qCiAgICBPcGVyYXRpb24gICAgbGlmdAogICAgTmVzdGVkX3VuZGVyICAgIGt1YmVybmV0ZXMKICAgIEFkZF9wcmVmaXggICAga3ViZXJuZXRlc18KW0ZpbHRlcl0KICAgIE5hbWUgICAgbW9kaWZ5CiAgICBNYXRjaCAgICBrdWJlLioKICAgIFJlbW92ZSAgICBzdHJlYW0KICAgIFJlbW92ZSAgICBrdWJlcm5ldGVzX3BvZF9pZAogICAgUmVtb3ZlICAgIGt1YmVybmV0ZXNfaG9zdAogICAgUmVtb3ZlICAgIGt1YmVybmV0ZXNfY29udGFpbmVyX2hhc2gKW0ZpbHRlcl0KICAgIE5hbWUgICAgbmVzdAogICAgTWF0Y2ggICAga3ViZS4qCiAgICBPcGVyYXRpb24gICAgbmVzdAogICAgV2lsZGNhcmQgICAga3ViZXJuZXRlc18qCiAgICBOZXN0X3VuZGVyICAgIGt1YmVybmV0ZXMKICAgIFJlbW92ZV9wcmVmaXggICAga3ViZXJuZXRlc18KW0ZpbHRlcl0KICAgIE5hbWUgICAgbHVhCiAgICBNYXRjaCAgICBzZXJ2aWNlLioKICAgIHNjcmlwdCAgICAvZmx1ZW50LWJpdC9jb25maWcvc3lzdGVtZC5sdWEKICAgIGNhbGwgICAgYWRkX3RpbWUKICAgIHRpbWVfYXNfdGFibGUgICAgdHJ1ZQpbT3V0cHV0XQogICAgTmFtZSAgICBlcwogICAgTWF0Y2hfUmVnZXggICAgKD86a3ViZXxzZXJ2aWNlKVwuKC4qKQogICAgSG9zdCAgICAxOTIuMTY4LjkuOTUKICAgIFBvcnQgICAgOTIwMAogICAgSFRUUF9Vc2VyICAgIGxzdGFjawogICAgSFRUUF9QYXNzd2QgICAgUEA4OHcwcmQKICAgIExvZ3N0YXNoX0Zvcm1hdCAgICB0cnVlCiAgICBMb2dzdGFzaF9QcmVmaXggICAga3MtbG9nc3Rhc2gtbG9nCiAgICBUaW1lX0tleSAgICBAdGltZXN0YW1wCiAgICBHZW5lcmF0ZV9JRCAgICB0cnVlCiAgICB0bHMgICAgT24KICAgIHRscy52ZXJpZnkgICAgZmFsc2UKW091dHB1dF0KICAgIE5hbWUgICAgZXMKICAgIE1hdGNoICAgIGt1YmVfYXVkaXRpbmcKICAgIEhvc3QgICAgZWxhc3RpY3NlYXJjaC1sb2dnaW5nLWRhdGEua3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbS5zdmMKICAgIFBvcnQgICAgOTIwMAogICAgSFRUUF9Vc2VyICAgIGxzdGFjawogICAgSFRUUF9QYXNzd2QgICAgUEA4OHcwcmQKICAgIExvZ3N0YXNoX0Zvcm1hdCAgICB0cnVlCiAgICBMb2dzdGFzaF9QcmVmaXggICAga3MtbG9nc3Rhc2gtYXVkaXRpbmcKICAgIEdlbmVyYXRlX0lEICAgIHRydWUKICAgIHRscyAgICBPbgogICAgdGxzLnZlcmlmeSAgICBmYWxzZQpbT3V0cHV0XQogICAgTmFtZSAgICBlcwogICAgTWF0Y2ggICAga3ViZV9ldmVudHMKICAgIEhvc3QgICAgZWxhc3RpY3NlYXJjaC1sb2dnaW5nLWRhdGEua3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbS5zdmMKICAgIFBvcnQgICAgOTIwMAogICAgSFRUUF9Vc2VyICAgIGxzdGFjawogICAgSFRUUF9QYXNzd2QgICAgUEA4OHcwcmQKICAgIExvZ3N0YXNoX0Zvcm1hdCAgICB0cnVlCiAgICBMb2dzdGFzaF9QcmVmaXggICAga3MtbG9nc3Rhc2gtZXZlbnRzCiAgICBHZW5lcmF0ZV9JRCAgICB0cnVlCiAgICB0bHMgICAgT24KICAgIHRscy52ZXJpZnkgICAgZmFsc2UK
      ```
 
-   - 执行下面的命令讲解密后的文件输出到**fluent-bit-config.conf**
+   - 执行下面的命令将解密后的文件输出到 **fluent-bit-config.conf**。
 
    - ```shell
      [root@ks-k8s-master-0 ~]# base64 -d fluent-bit-config > fluent-bit-config.conf
      ```
 
-   - 看看输出的文件都有啥
+   - 看看输出的文件都有啥。
 
    - ```yaml
      [root@ks-k8s-master-0 ~]# cat fluent-bit-config.conf 
@@ -2294,9 +2285,9 @@ journalctl -u elasticsearch.service
          tls.verify    false
      ```
 
-   - 细节我们先不深究(其实我也不知道啥意思)，我们直奔我们的目标，找到**[Output] Name为es**且标有**Match_Regex**的配置，添加**Trace_Error     On**
+   - 细节我们先不深究 (其实我也不知道啥意思)，我们直奔我们的目标，找到**[Output] Name 为 es** 且标有 **Match_Regex** 的配置，添加 **Trace_Error     On**。
 
-   - 效果如下
+   - 效果如下：
 
    - ```yaml
      [Output]
@@ -2315,39 +2306,37 @@ journalctl -u elasticsearch.service
          Trace_Error     On
      ```
 
-   - 保存文件并退出，再将该文件中的内容进行base64编码
+   - 保存文件并退出，再将该文件中的内容进行 base64 编码。
 
-   - ```she
+   - ```shell
      [root@ks-k8s-master-0 ~]# base64 -w 0 fluent-bit-config.conf 
      W1NlcnZpY2VdCiAgICBQYXJzZXJzX0ZpbGUgICAgcGFyc2Vycy5jb25mCltJbnB1dF0KICAgIE5hbWUgICAgc3lzdGVtZAogICAgUGF0aCAgICAvdmFyL2xvZy9qb3VybmFsCiAgICBEQiAgICAvZmx1ZW50LWJpdC90YWlsL2RvY2tlci5kYgogICAgREIuU3luYyAgICBOb3JtYWwKICAgIFRhZyAgICBzZXJ2aWNlLmRvY2tlcgogICAgU3lzdGVtZF9GaWx0ZXIgICAgX1NZU1RFTURfVU5JVD1kb2NrZXIuc2VydmljZQpbSW5wdXRdCiAgICBOYW1lICAgIHN5c3RlbWQKICAgIFBhdGggICAgL3Zhci9sb2cvam91cm5hbAogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9rdWJlbGV0LmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgVGFnICAgIHNlcnZpY2Uua3ViZWxldAogICAgU3lzdGVtZF9GaWx0ZXIgICAgX1NZU1RFTURfVU5JVD1rdWJlbGV0LnNlcnZpY2UKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMvKi5sb2cKICAgIEV4Y2x1ZGVfUGF0aCAgICAvdmFyL2xvZy9jb250YWluZXJzLypfa3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbV9ldmVudHMtZXhwb3J0ZXIqLmxvZywvdmFyL2xvZy9jb250YWluZXJzL2t1YmUtYXVkaXRpbmctd2ViaG9vaypfa3ViZXNwaGVyZS1sb2dnaW5nLXN5c3RlbV9rdWJlLWF1ZGl0aW5nLXdlYmhvb2sqLmxvZwogICAgUmVmcmVzaF9JbnRlcnZhbCAgICAxMAogICAgU2tpcF9Mb25nX0xpbmVzICAgIHRydWUKICAgIERCICAgIC9mbHVlbnQtYml0L3RhaWwvcG9zLmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgTWVtX0J1Zl9MaW1pdCAgICA1TUIKICAgIFBhcnNlciAgICBkb2NrZXIKICAgIFRhZyAgICBrdWJlLioKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMva3ViZS1hdWRpdGluZy13ZWJob29rKl9rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtX2t1YmUtYXVkaXRpbmctd2ViaG9vayoubG9nCiAgICBSZWZyZXNoX0ludGVydmFsICAgIDEwCiAgICBTa2lwX0xvbmdfTGluZXMgICAgdHJ1ZQogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9wb3MtYXVkaXRpbmcuZGIKICAgIERCLlN5bmMgICAgTm9ybWFsCiAgICBNZW1fQnVmX0xpbWl0ICAgIDVNQgogICAgUGFyc2VyICAgIGRvY2tlcgogICAgVGFnICAgIGt1YmVfYXVkaXRpbmcKW0lucHV0XQogICAgTmFtZSAgICB0YWlsCiAgICBQYXRoICAgIC92YXIvbG9nL2NvbnRhaW5lcnMvKl9rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtX2V2ZW50cy1leHBvcnRlcioubG9nCiAgICBSZWZyZXNoX0ludGVydmFsICAgIDEwCiAgICBTa2lwX0xvbmdfTGluZXMgICAgdHJ1ZQogICAgREIgICAgL2ZsdWVudC1iaXQvdGFpbC9wb3MtZXZlbnRzLmRiCiAgICBEQi5TeW5jICAgIE5vcm1hbAogICAgTWVtX0J1Zl9MaW1pdCAgICA1TUIKICAgIFBhcnNlciAgICBkb2NrZXIKICAgIFRhZyAgICBrdWJlX2V2ZW50cwpbRmlsdGVyXQogICAgTmFtZSAgICBwYXJzZXIKICAgIE1hdGNoICAgIGt1YmVfYXVkaXRpbmcKICAgIEtleV9OYW1lICAgIGxvZwogICAgUGFyc2VyICAgIGpzb24KW0ZpbHRlcl0KICAgIE5hbWUgICAgbW9kaWZ5CiAgICBNYXRjaCAgICBrdWJlX2F1ZGl0aW5nCiAgICBDb25kaXRpb24gICAgS2V5X2RvZXNfbm90X2V4aXN0ICAgIEF1ZGl0SUQgICAgCiAgICBBZGQgICAgaWdub3JlICAgIHRydWUKW0ZpbHRlcl0KICAgIE5hbWUgICAgZ3JlcAogICAgTWF0Y2ggICAga3ViZV9hdWRpdGluZwogICAgRXhjbHVkZSAgICBpZ25vcmUgdHJ1ZQpbRmlsdGVyXQogICAgTmFtZSAgICBwYXJzZXIKICAgIE1hdGNoICAgIGt1YmVfZXZlbnRzCiAgICBLZXlfTmFtZSAgICBsb2cKICAgIFBhcnNlciAgICBqc29uCltGaWx0ZXJdCiAgICBOYW1lICAgIGt1YmVybmV0ZXMKICAgIE1hdGNoICAgIGt1YmUuKgogICAgS3ViZV9VUkwgICAgaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjOjQ0MwogICAgS3ViZV9DQV9GaWxlICAgIC92YXIvcnVuL3NlY3JldHMva3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9jYS5jcnQKICAgIEt1YmVfVG9rZW5fRmlsZSAgICAvdmFyL3J1bi9zZWNyZXRzL2t1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvdG9rZW4KICAgIExhYmVscyAgICBmYWxzZQogICAgQW5ub3RhdGlvbnMgICAgZmFsc2UKW0ZpbHRlcl0KICAgIE5hbWUgICAgbmVzdAogICAgTWF0Y2ggICAga3ViZS4qCiAgICBPcGVyYXRpb24gICAgbGlmdAogICAgTmVzdGVkX3VuZGVyICAgIGt1YmVybmV0ZXMKICAgIEFkZF9wcmVmaXggICAga3ViZXJuZXRlc18KW0ZpbHRlcl0KICAgIE5hbWUgICAgbW9kaWZ5CiAgICBNYXRjaCAgICBrdWJlLioKICAgIFJlbW92ZSAgICBzdHJlYW0KICAgIFJlbW92ZSAgICBrdWJlcm5ldGVzX3BvZF9pZAogICAgUmVtb3ZlICAgIGt1YmVybmV0ZXNfaG9zdAogICAgUmVtb3ZlICAgIGt1YmVybmV0ZXNfY29udGFpbmVyX2hhc2gKW0ZpbHRlcl0KICAgIE5hbWUgICAgbmVzdAogICAgTWF0Y2ggICAga3ViZS4qCiAgICBPcGVyYXRpb24gICAgbmVzdAogICAgV2lsZGNhcmQgICAga3ViZXJuZXRlc18qCiAgICBOZXN0X3VuZGVyICAgIGt1YmVybmV0ZXMKICAgIFJlbW92ZV9wcmVmaXggICAga3ViZXJuZXRlc18KW0ZpbHRlcl0KICAgIE5hbWUgICAgbHVhCiAgICBNYXRjaCAgICBzZXJ2aWNlLioKICAgIHNjcmlwdCAgICAvZmx1ZW50LWJpdC9jb25maWcvc3lzdGVtZC5sdWEKICAgIGNhbGwgICAgYWRkX3RpbWUKICAgIHRpbWVfYXNfdGFibGUgICAgdHJ1ZQpbT3V0cHV0XQogICAgTmFtZSAgICBlcwogICAgTWF0Y2hfUmVnZXggICAgKD86a3ViZXxzZXJ2aWNlKVwuKC4qKQogICAgSG9zdCAgICAxOTIuMTY4LjkuOTUKICAgIFBvcnQgICAgOTIwMAogICAgSFRUUF9Vc2VyICAgIGxzdGFjawogICAgSFRUUF9QYXNzd2QgICAgUEA4OHcwcmQKICAgIExvZ3N0YXNoX0Zvcm1hdCAgICB0cnVlCiAgICBMb2dzdGFzaF9QcmVmaXggICAga3MtbG9nc3Rhc2gtbG9nCiAgICBUaW1lX0tleSAgICBAdGltZXN0YW1wCiAgICBHZW5lcmF0ZV9JRCAgICB0cnVlCiAgICB0bHMgICAgT24KICAgIHRscy52ZXJpZnkgICAgZmFsc2UKICAgIFRyYWNlX0Vycm9yICAgICBPbgpbT3V0cHV0XQogICAgTmFtZSAgICBlcwogICAgTWF0Y2ggICAga3ViZV9hdWRpdGluZwogICAgSG9zdCAgICBlbGFzdGljc2VhcmNoLWxvZ2dpbmctZGF0YS5rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtLnN2YwogICAgUG9ydCAgICA5MjAwCiAgICBIVFRQX1VzZXIgICAgbHN0YWNrCiAgICBIVFRQX1Bhc3N3ZCAgICBQQDg4dzByZAogICAgTG9nc3Rhc2hfRm9ybWF0ICAgIHRydWUKICAgIExvZ3N0YXNoX1ByZWZpeCAgICBrcy1sb2dzdGFzaC1hdWRpdGluZwogICAgR2VuZXJhdGVfSUQgICAgdHJ1ZQogICAgdGxzICAgIE9uCiAgICB0bHMudmVyaWZ5ICAgIGZhbHNlCltPdXRwdXRdCiAgICBOYW1lICAgIGVzCiAgICBNYXRjaCAgICBrdWJlX2V2ZW50cwogICAgSG9zdCAgICBlbGFzdGljc2VhcmNoLWxvZ2dpbmctZGF0YS5rdWJlc3BoZXJlLWxvZ2dpbmctc3lzdGVtLnN2YwogICAgUG9ydCAgICA5MjAwCiAgICBIVFRQX1VzZXIgICAgbHN0YWNrCiAgICBIVFRQX1Bhc3N3ZCAgICBQQDg4dzByZAogICAgTG9nc3Rhc2hfRm9ybWF0ICAgIHRydWUKICAgIExvZ3N0YXNoX1ByZWZpeCAgICBrcy1sb2dzdGFzaC1ldmVudHMKICAgIEdlbmVyYXRlX0lEICAgIHRydWUKICAgIHRscyAgICBPbgogICAgdGxzLnZlcmlmeSAgICBmYWxzZQo=
      ```
 
-   - 先把输出结果复制下来
+   - 先把输出结果复制下来。
 
-   - 再来修改我们的Fluent-bit的配置文件的secrets，修改**fluent-bit.conf**的值
+   - 再来修改我们的 Fluent-bit 的配置文件的 secrets，修改 **fluent-bit.conf** 的值。
 
    - ```shell
      k8s-master-0 ~]# kubectl kubectl edit secrets fluent-bit-config -n kubesphere-logging-system
      secret/fluent-bit-config edited
      ```
 
-   - 然后我又崩溃了，修改完的配置又改回原来的样子了，看样子又是使用了**fluent-operator**不能直接修改conf文件，唉。。。
+   - 然后我又崩溃了，修改完的配置又改回原来的样子了，看样子又是使用了 **fluent-operator** 不能直接修改 conf 文件，唉。。。
 
-   - 先折回Output的配置，把**es-auditing**和**es-events**的配置先改对了
+   - 先折回 Output 的配置，把 **es-auditing** 和 **es-events** 的配置先改对了。
 
-   - 有了上面改造es的经验，细节我就不多说了，忘记的可以翻翻上面的文档
-
-   - 备份**es-auditing**和**es-events**的Output配置
+   - 备份 **es-auditing** 和 **es-events** 的 Output 配置。
 
    - ```shell
-     [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml > es-auditing.output.yaml
+  [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml > es-auditing.output.yaml
      [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-events -o yaml > es-events.output.yaml
      ```
+   
+   - 先看看 **es-auditing** 的现状。
 
-   - 先看看**es-auditing**的现状
-
-   - ```yaml
-     [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml
+   - ```shell
+  [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Output
      metadata:
@@ -2384,23 +2373,23 @@ journalctl -u elasticsearch.service
            verify: false
        match: kube_auditing
      ```
+   
+   - 分析上面的文件，发现只需要修改 **host** 地址就可以了，其他的都不需要，这可比上面修改 **es** 的配置舒服多了。
 
-   - 分析上面的文件，发现只需要修改**host**地址就可以了，其他的都不需要，这可比上面修改**es**的配置舒服多了
-
-   - 修改**es-auditing**的配置
+   - 修改 **es-auditing** 的配置。
 
    - ```shell
-     [root@ks-k8s-master-0 ~]# kubectl edit outputs -n kubesphere-logging-system es-auditing 
+  [root@ks-k8s-master-0 ~]# kubectl edit outputs -n kubesphere-logging-system es-auditing 
      output.logging.kubesphere.io/es-auditing edited
      ```
+   
+   - 修改后 , 再次查看，发现资源定义的内容如下：
 
-   - 修改后,再次查看，发现资源定义的内容如下：
-
-   - ```yaml
-     [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml
+   - ```shell
+  [root@ks-k8s-master-0 ~]# kubectl get outputs -n kubesphere-logging-system es-auditing -o yaml
      
      apiVersion: logging.kubesphere.io/v1alpha2
-     kind: Output
+  kind: Output
      metadata:
        annotations:
          kubectl.kubernetes.io/last-applied-configuration: |
@@ -2435,14 +2424,14 @@ journalctl -u elasticsearch.service
            verify: false
        match: kube_auditing
      ```
+   
+   - 接下来修改 **es-events** 的配置，先看看 **es-events** 的现状。
 
-   - 接下来修改**es-events**的配置，先看看**es-events**的现状
-
-   - ```yaml
-     [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-events -o yaml
+   - ```shell
+  [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-events -o yaml
      
      apiVersion: logging.kubesphere.io/v1alpha2
-     kind: Output
+  kind: Output
      metadata:
        annotations:
          kubectl.kubernetes.io/last-applied-configuration: |
@@ -2477,23 +2466,23 @@ journalctl -u elasticsearch.service
            verify: false
        match: kube_events
      ```
+   
+   - 分析上面的文件，发现一样只需要修改 **host** 地址就可以。
 
-   - 分析上面的文件，发现一样只需要修改**host**地址就可以
-
-   - 修改**es-auditing**的配置
+   - 修改 **es-auditing** 的配置。
 
    - ```shell
-     [root@ks-k8s-master-0 ~]#  kubectl edit outputs -n kubesphere-logging-system es-events
+  [root@ks-k8s-master-0 ~]#  kubectl edit outputs -n kubesphere-logging-system es-events
      output.logging.kubesphere.io/es-events edited
      ```
+   
+   - 修改后 , 再次查看，发现资源定义的内容如下：
 
-   - 修改后,再次查看，发现资源定义的内容如下：
-
-   - ```yaml
-     [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-events -o yaml
+   - ```shell
+  [root@ks-k8s-master-0 ~]#  kubectl get outputs -n kubesphere-logging-system es-events -o yaml
      
      apiVersion: logging.kubesphere.io/v1alpha2
-     kind: Output
+  kind: Output
      metadata:
        annotations:
          kubectl.kubernetes.io/last-applied-configuration: |
@@ -2528,197 +2517,195 @@ journalctl -u elasticsearch.service
            verify: false
        match: kube_events
      ```
+   
+   - 我们再次重建 Fluent-bit，看看是否有奇迹。
 
-   - 我们再次重建Fluent-bit，看看是否有奇迹
-
-   - 其中一个pod重启后的日志如下
+   - 其中一个 pod 重启后的日志如下。
 
    - ```yaml
-     容器日志
+  容器日志
      
       level=info msg="Fluent bit started"
-     
+  
       Fluent Bit v1.8.3
-     
+  
       * Copyright (C) 2019-2021 The Fluent Bit Authors
-     
+  
       * Copyright (C) 2015-2018 Treasure Data
-     
+  
       * Fluent Bit is a CNCF sub-project under the umbrella of Fluentd
-     
+  
       * https://fluentbit.io
-     
-      
-     
+  
       [2022/04/21 08:02:30] [ info] [engine] started (pid=16)
-     
+  
       [2022/04/21 08:02:30] [ info] [storage] version=1.1.1, initializing...
-     
+  
       [2022/04/21 08:02:30] [ info] [storage] in-memory
-     
+  
       [2022/04/21 08:02:30] [ info] [storage] normal synchronization mode, checksum disabled, max_chunks_up=128
-     
+  
       [2022/04/21 08:02:30] [ info] [cmetrics] version=0.1.6
-     
+  
       [2022/04/21 08:02:30] [ info] [filter:kubernetes:kubernetes.4] https=1 host=kubernetes.default.svc port=443
-     
+  
       [2022/04/21 08:02:30] [ info] [filter:kubernetes:kubernetes.4] local POD info OK
-     
+  
       [2022/04/21 08:02:30] [ info] [filter:kubernetes:kubernetes.4] testing connectivity with API server...
-     
+  
       [2022/04/21 08:02:30] [ info] [filter:kubernetes:kubernetes.4] connectivity OK
-     
+  
       [2022/04/21 08:02:30] [ info] [sp] stream processor started
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=416649 watch_fd=1 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_alertmanager-1a71f1d5b1136320644f3289e4b22544620db4a0d35a1ffec52bc534d729c358.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=461549 watch_fd=2 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_config-reloader-bc14c53008f1e800d6240a5b912239a3d5682c6dcb719f48c69b7e8ba5892e35.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134582558 watch_fd=3 name=/var/log/containers/calico-kube-controllers-75ddb95444-8xvf4_kube-system_calico-kube-controllers-dc90044aa0ce62e61dfb0842c8f2e5aa8d021738adffca847b003a5c9621512c.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268955529 watch_fd=4 name=/var/log/containers/calico-node-pzvrj_kube-system_flexvol-driver-abf59d8a7af22c683dfb0776a0835c719f41ef23446e912f82901a4fd9cf166f.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373423 watch_fd=5 name=/var/log/containers/calico-node-pzvrj_kube-system_install-cni-b3d49f2e9c03e63c3863d50365d2ade01dead979c90285c526ac0029b58411cd.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373208 watch_fd=6 name=/var/log/containers/calico-node-pzvrj_kube-system_upgrade-ipam-6d4425d7ea5302511df1c278f2b113ac8fdfa0a372e07b025e0a9b45d30129ac.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403716654 watch_fd=7 name=/var/log/containers/coredns-5495dd7c88-68k9b_kube-system_coredns-879c087a4c8717d0886e6603a63e9503a406d215cfe77941cbcc1cc7c138d010.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583208 watch_fd=8 name=/var/log/containers/coredns-5495dd7c88-z9q6j_kube-system_coredns-80cd4427410de02465b415683817a75674a95777ffc0929f93e87506b120ca59.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=466327 watch_fd=9 name=/var/log/containers/ks-apiserver-574966976-snfm4_kubesphere-system_ks-apiserver-8871a0cc18cfef4663a15680761e272efeafe061ea9a898319265a145b494b18.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=269010417 watch_fd=10 name=/var/log/containers/ks-console-65f4d44d88-hzw9b_kubesphere-system_ks-console-f600455c3af064c53adc8eb7e5412505c4d0e50362ab11b8e59d2e71b552b0f1.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=269514179 watch_fd=11 name=/var/log/containers/ks-controller-manager-79c7dc79f5-j9fz5_kubesphere-system_ks-controller-manager-a8c35247c7cda868d3c023616026515690d2fedf2abb0f9367d1dc338103f7af.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403995814 watch_fd=12 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_config-reloader-2d51bab0babdd47864ec235efdbd69d2075cc8bf72c3642449be69f68aa1f0d5.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=962171 watch_fd=13 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_events-ruler-da24092a12c4fc0d0aab8a02c7fc7cb1e0e82d15a924717222bdbadee7935c84.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134580590 watch_fd=14 name=/var/log/containers/kube-apiserver-ks-k8s-master-0_kube-system_kube-apiserver-b4e97a525442956fe7612d27367a184ee09d65a56464149ec913ea004db0f1ef.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134580575 watch_fd=15 name=/var/log/containers/kube-controller-manager-ks-k8s-master-0_kube-system_kube-controller-manager-a07d1c5ed4108d98de2ba322b47939d5007c9d266a4ff558d57ec87ab10b2d54.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268955289 watch_fd=16 name=/var/log/containers/kube-proxy-bc59k_kube-system_kube-proxy-79144efa6b42a0f9636132538cc4ade6665269fea5903f3e1e0be05f14376d7c.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403715964 watch_fd=17 name=/var/log/containers/kube-scheduler-ks-k8s-master-0_kube-system_kube-scheduler-1a2ffcf4000a9bb0fa526fcfa1970e69465dfe0bb4c635a4d95f50f2e27ef763.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403855647 watch_fd=18 name=/var/log/containers/minio-859cb4d777-mpsk9_kubesphere-system_minio-d76f9516fa485cd24851afccfb2c85fd74ce894ba580af98703704860e1c00ed.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=413299 watch_fd=19 name=/var/log/containers/node-exporter-wwrpf_kubesphere-monitoring-system_kube-rbac-proxy-e35229db1e46e8b7b0a7d5a3cd581107102a3531b31d2e32d7e787a118c82896.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=375870 watch_fd=20 name=/var/log/containers/node-exporter-wwrpf_kubesphere-monitoring-system_node-exporter-e5cc5a4cc937cf9de149dd25bd6e8441ca176bf26cb2a214dd0b47627e7d8861.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134581094 watch_fd=21 name=/var/log/containers/nodelocaldns-sp59h_kube-system_node-cache-8b5bdf5a116af255f979a4a349c168257b632d24805d5f257a642dd97b0d53a1.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=463110 watch_fd=22 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_config-reloader-1378a8d9cd7a96334cb15adeafb468497ece0a9a600a3193fb80b60bc5b7e9b5.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=135190584 watch_fd=23 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_prometheus-26e94cf0828cd1bd9c5da45217b7f3e654a7a41ce0dc5943375b1644d1a6a002.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134738131 watch_fd=24 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_prometheus-97de8b484747bae4aeac54ffd9b75c1ddc9582a28c768ebc9be395390bd031c3.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268956011 watch_fd=25 name=/var/log/containers/redis-ha-haproxy-868fdbddd4-kqrl5_kubesphere-system_config-init-0fb775710352218a66aec02ea2a736892c33df43dd4206e155e0bce6af4aba63.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373969 watch_fd=26 name=/var/log/containers/redis-ha-haproxy-868fdbddd4-kqrl5_kubesphere-system_haproxy-6c15749c02904875f5c1a280a42a908baa074ccffd3365f40b2692b6fe60acf5.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403792092 watch_fd=27 name=/var/log/containers/redis-ha-server-2_kubesphere-system_config-init-fa7c66040a53bef1c3c9b1844a4b25870835a6147cd83abf914ebb129a036536.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=412431 watch_fd=28 name=/var/log/containers/redis-ha-server-2_kubesphere-system_redis-6b19bb18f79c55cca6022bd8caa13a33d8c57386897db47fc011fd9fbe589b8a.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134738124 watch_fd=29 name=/var/log/containers/redis-ha-server-2_kubesphere-system_sentinel-7b2cbde0a38f45b692dd1679912bb9ba4bdfc358667c32164592a0e7ab2a87a6.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=467559 watch_fd=30 name=/var/log/containers/thanos-ruler-kubesphere-1_kubesphere-monitoring-system_config-reloader-28aef566c79b3cc073a67787c6ad44902c88930f069ab26cf5657aa2d1235108.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403860482 watch_fd=31 name=/var/log/containers/thanos-ruler-kubesphere-1_kubesphere-monitoring-system_thanos-ruler-24cfbc7280d54f3289c4ae70d0bb25a4964dd2f759e8bddefad3cf92070b1903.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583426 watch_fd=32 name=/var/log/containers/calico-node-pzvrj_kube-system_calico-node-f2f40fb9878e3328a4783ceb9c01eaed9edf24c85579ed87c7ffc2161779c3e2.log
-     
+  
       [2022/04/21 08:02:30] [ info] [input:tail:tail.2] inotify_fs_add(): inode=984530 watch_fd=33 name=/var/log/containers/fluent-bit-97khn_kubesphere-logging-system_fluent-bit-9cb8370106aed1e55ca9b9304662301a3ab4cbe6f543616cb5d1eec39d6f7b25.log
-     
+  
       [2022/04/21 08:02:34] [ warn] [engine] failed to flush chunk '16-1650528150.277308324.flb', retry in 8 seconds: task_id=0, input=systemd.0 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:34] [ warn] [engine] failed to flush chunk '16-1650528150.357492295.flb', retry in 9 seconds: task_id=2, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:34] [ warn] [engine] failed to flush chunk '16-1650528150.296176788.flb', retry in 6 seconds: task_id=1, input=systemd.1 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:34] [ warn] [engine] failed to flush chunk '16-1650528150.386272778.flb', retry in 7 seconds: task_id=3, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:39] [ warn] [engine] failed to flush chunk '16-1650528158.305010058.flb', retry in 10 seconds: task_id=4, input=systemd.1 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:39] [ warn] [engine] failed to flush chunk '16-1650528154.329523292.flb', retry in 6 seconds: task_id=5, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:39] [ warn] [engine] failed to flush chunk '16-1650528154.753657988.flb', retry in 9 seconds: task_id=6, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:39] [ warn] [engine] failed to flush chunk '16-1650528155.347169912.flb', retry in 7 seconds: task_id=7, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:40] [ warn] [engine] chunk '16-1650528150.296176788.flb' cannot be retried: task_id=1, input=systemd.1 > output=es.0
-     
+  
       [2022/04/21 08:02:41] [ warn] [engine] chunk '16-1650528150.386272778.flb' cannot be retried: task_id=3, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:42] [ warn] [engine] chunk '16-1650528150.277308324.flb' cannot be retried: task_id=0, input=systemd.0 > output=es.0
-     
+  
       [2022/04/21 08:02:43] [ warn] [engine] chunk '16-1650528150.357492295.flb' cannot be retried: task_id=2, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:44] [ warn] [engine] failed to flush chunk '16-1650528159.328332342.flb', retry in 7 seconds: task_id=0, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:45] [ warn] [engine] chunk '16-1650528154.329523292.flb' cannot be retried: task_id=5, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:46] [ warn] [engine] chunk '16-1650528155.347169912.flb' cannot be retried: task_id=7, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:48] [ warn] [engine] chunk '16-1650528154.753657988.flb' cannot be retried: task_id=6, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:49] [ warn] [engine] chunk '16-1650528158.305010058.flb' cannot be retried: task_id=4, input=systemd.1 > output=es.0
-     
+  
       [2022/04/21 08:02:49] [ warn] [engine] failed to flush chunk '16-1650528168.802004767.flb', retry in 6 seconds: task_id=1, input=systemd.1 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:49] [ warn] [engine] failed to flush chunk '16-1650528164.324962334.flb', retry in 6 seconds: task_id=2, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:51] [ warn] [engine] chunk '16-1650528159.328332342.flb' cannot be retried: task_id=0, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:54] [ warn] [engine] failed to flush chunk '16-1650528169.329511724.flb', retry in 8 seconds: task_id=0, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:55] [ warn] [engine] chunk '16-1650528168.802004767.flb' cannot be retried: task_id=1, input=systemd.1 > output=es.0
-     
+  
       [2022/04/21 08:02:55] [ warn] [engine] chunk '16-1650528164.324962334.flb' cannot be retried: task_id=2, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:02:59] [ warn] [engine] failed to flush chunk '16-1650528179.232206869.flb', retry in 8 seconds: task_id=1, input=systemd.1 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:59] [ warn] [engine] failed to flush chunk '16-1650528174.324611868.flb', retry in 8 seconds: task_id=2, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:02:59] [ warn] [engine] failed to flush chunk '16-1650528174.430818290.flb', retry in 7 seconds: task_id=3, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/21 08:03:02] [ warn] [engine] chunk '16-1650528169.329511724.flb' cannot be retried: task_id=0, input=tail.2 > output=es.0
-     
+  
       [2022/04/21 08:03:04] [ warn] [engine] failed to flush chunk '16-1650528179.322293412.flb', retry in 7 seconds: task_id=0, input=tail.2 > output=es.0 (out_id=0)
-     
+  
      ```
 
-   - 操作了一圈，又回到了原点，还是想办法开Fluent-bit的Trace日志吧，既然Oupt模板里没有对应参数，那么还是去底层解决吧。
+   - 操作了一圈，又回到了原点，还是想办法开 Fluent-bit 的 Trace 日志吧，既然 Oupt 模板里没有对应参数，那么还是去底层解决吧。
 
-   - 首先我们要知道KubeSphere里部署的Fluent-bit采用了**fluent-operator**，operator里又专门定义了Output的类别的资源去对应Fluent-bit配置文件中的output章节。
+   - 首先我们要知道 KubeSphere 里部署的 Fluent-bit 采用了 **fluent-operator**，operator 里又专门定义了 Output 的类别的资源去对应 Fluent-bit 配置文件中的 output 章节。
 
-   - 那我们就去找到fluent-operator的官方网站，看看源码里[crds中对于output资源如何定义的](https://github.com/fluent/fluent-operator/blob/master/charts/fluent-operator/crds/fluentbit.fluent.io_clusteroutputs.yaml)（这里面就涉及operator的知识了，这个技能请自己get吧，细节我目前也不懂，所以也讲不出来）
+   - 那我们就去找到 fluent-operator 的官方网站，看看源码里[crds 中对于 output 资源如何定义的](https://github.com/fluent/fluent-operator/blob/master/charts/fluent-operator/crds/fluentbit.fluent.io_clusteroutputs.yaml)（这里面就涉及 operator 的知识了，这个技能请自己 get 吧，细节我目前也不懂，所以也讲不出来）
 
-   - 打开资源定义文件后，在里面搜索关键词**traceError**，注意一定是在**es**章节里的
+   - 打开资源定义文件后，在里面搜索关键词 **traceError**，注意一定是在 **es** 章节里的。
 
    - ![image-20220422085824266](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220422085824266.png)
 
-   - 有两个相关字段**traceError**和**traceOutput**，这里看说明感觉**traceOutput**会更猛，但是前面有人说了开启**traceError**，那咱就先试试**traceError**，不行再来搞**traceOutput**。
+   - 有两个相关字段 **traceError** 和 **traceOutput**，这里看说明感觉 **traceOutput** 会更猛，但是前面有人说了开启 **traceError**，那咱就先试试 **traceError**，不行再来搞 **traceOutput**。
 
-   - 来吧，接着修改es的output文件,主要是在现有的配置文件中加入**traceError: true**
+   - 来吧，接着修改 es 的 output 文件 , 主要是在现有的配置文件中加入 **traceError: true**。
 
    - ```shell
-     [root@ks-k8s-master-0 ~]# kubectl edit outputs -n kubesphere-logging-system es
+  [root@ks-k8s-master-0 ~]# kubectl edit outputs -n kubesphere-logging-system es
      output.logging.kubesphere.io/es edited
      ```
+   
+   - 再用 base64 解码 secrets，看看配置文件是否有变化，这次我们换个简单的方式**一把输出**。
 
-   - 再用base64解码secrets，看看配置文件是否有变化，这次我们换个简单的方式**一把输出**
-
-     > 你是不是要怼我了，既然有这么优雅的方式，之前为啥不用，呵呵，之前我也不会，是在前面搜索解决办法时无意中get到的，[出处在这](https://banzaicloud.com/docs/one-eye/logging-operator/operation/troubleshooting/fluentbit/))
+     > 你是不是要怼我了，既然有这么优雅的方式，之前为啥不用，呵呵，之前我也不会，是在前面搜索解决办法时无意中 Get 到的，[出处在这](https://banzaicloud.com/docs/one-eye/logging-operator/operation/troubleshooting/fluentbit/))。
 
    - ```shell
-     [root@ks-k8s-master-0 ~]# kubectl get secret -n kubesphere-logging-system fluent-bit-config -o jsonpath="{.data['fluent-bit\.conf']}" | base64 --decode
+  [root@ks-k8s-master-0 ~]# kubectl get secret -n kubesphere-logging-system fluent-bit-config -o jsonpath="{.data['fluent-bit\.conf']}" | base64 --decode
      [Service]
          Parsers_File    parsers.conf
      [Input]
@@ -2860,114 +2847,114 @@ journalctl -u elasticsearch.service
          tls    On
          tls.verify    false
      ```
+   
+   - 可以看到配置文件里已经存在了 **Trace_Error    true**，但是是否有效果、有变化呢？我们需要重建 **Fluent-bit** 的守护进程来看看。
 
-   - 可以看到配置文件里已经存在了**Trace_Error    true**，但是是否有效果、有变化呢？我们需要重建**Fluent-bit**的守护进程来看看
-
-   - 登录控制台，**集群管理**->**应用负载**->**工作负载**->**守护进程集**，找到**fluent-bit**，点击**重新创建**
+   - 登录控制台，**集群管理**->**应用负载**->**工作负载**->**守护进程集**，找到 **fluent-bit**，点击**重新创建**。
 
    - ![kubesphere-daemonsets-flunet-bit-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-2.png)
 
-   - 然后点击**fluent-bit**，进入详情页面，可以看到有一个pod重建了（至于为什么其他的没变，咱先不说）
+   - 然后点击 **fluent-bit**，进入详情页面，可以看到有一个 pod 重建了（至于为什么其他的没变，咱先不说）。
 
    - ![kubesphere-daemonsets-flunet-bit-3](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-3.png)
 
-   - 进入新创建的pod，咱看看日志输出有变化么！！！
+   - 进入新创建的 pod，咱看看日志输出有变化么！！！
 
    - ```yaml
-      [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590190.748640950.flb', retry in 6 seconds: task_id=0, input=systemd.0 > output=es.0 (out_id=0)
-       
+   [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590190.748640950.flb', retry in 6 seconds: task_id=0, input=systemd.0 > output=es.0 (out_id=0)
+      
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590190.792218570.flb', retry in 6 seconds: task_id=1, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590191.359045217.flb', retry in 7 seconds: task_id=2, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590191.862711494.flb', retry in 8 seconds: task_id=3, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590192.369644921.flb', retry in 11 seconds: task_id=4, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590192.873445035.flb', retry in 7 seconds: task_id=5, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590193.381872747.flb', retry in 8 seconds: task_id=6, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590193.897774507.flb', retry in 9 seconds: task_id=7, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590190.874190363.flb', retry in 11 seconds: task_id=8, input=tail.2 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590190.980708345.flb', retry in 8 seconds: task_id=9, input=tail.2 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:35] [ warn] [engine] failed to flush chunk '15-1650590194.547452615.flb', retry in 9 seconds: task_id=10, input=tail.2 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:40] [ warn] [engine] failed to flush chunk '15-1650590195.289567444.flb', retry in 11 seconds: task_id=11, input=systemd.1 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:40] [ warn] [engine] failed to flush chunk '15-1650590195.158774254.flb', retry in 8 seconds: task_id=12, input=tail.2 > output=es.0 (out_id=0)
-       
+   
       [2022/04/22 01:16:41] [ warn] [engine] chunk '15-1650590190.748640950.flb' cannot be retried: task_id=0, input=systemd.0 > output=es.0
-       
+   
       [2022/04/22 01:16:41] [ warn] [engine] chunk '15-1650590190.792218570.flb' cannot be retried: task_id=1, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:42] [ warn] [engine] chunk '15-1650590191.359045217.flb' cannot be retried: task_id=2, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:42] [ warn] [engine] chunk '15-1650590192.873445035.flb' cannot be retried: task_id=5, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:43] [ warn] [engine] chunk '15-1650590191.862711494.flb' cannot be retried: task_id=3, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:43] [ warn] [engine] chunk '15-1650590193.381872747.flb' cannot be retried: task_id=6, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:43] [ warn] [engine] chunk '15-1650590190.980708345.flb' cannot be retried: task_id=9, input=tail.2 > output=es.0
-       
+   
       [2022/04/22 01:16:44] [ warn] [engine] chunk '15-1650590193.897774507.flb' cannot be retried: task_id=7, input=systemd.1 > output=es.0
-       
+   
       [2022/04/22 01:16:44] [ warn] [engine] chunk '15-1650590194.547452615.flb' cannot be retried: task_id=10, input=tail.2 > output=es.0
-     ```
+  ```
+   
+   - 然而并没有什么 x 用，还是只有这些简单的输出，**说好的详细日志呢！！！**
 
-   - 然而并没有什么x用，还是只有这些简单的输出，**说好的详细日志呢！！！**
+   - 既然 **traceError** 不行，那我们再去看看 **traceOutput**，细节不说了，总之配置完以后没啥变化。此时，我己经是**彻底崩溃**了，各种尝试都堵死了，到现在居然还没看到具体为啥。
 
-   - 既然**traceError**不行，那我们再去看看**traceOutput**，细节不说了，总之配置完以后没啥变化。此时，我己经是**彻底崩溃**了，各种尝试都堵死了，到现在居然还没看到具体为啥。
-
-     > **你们看文档这么点内容以为事情刚发生？？？实际上已经过去3天了！！！从这个事就能看出来，我其实很笨的）**
+     > **你们看文档这么点内容以为事情刚发生？？？实际上已经过去 3 天了！！！从这个事就能看出来，我其实很笨的）**
 
    - 深度怀疑前面的两个参数，虽然配置上了，但是并没有生效，但是我有没有证据。暂时没有其他处理思路了。
 
    - 放弃自查了，去各种群里问一圈，看看有没有现成的可以吃，然后我发现没朋友的可悲了，问了一圈居然没人搭理我，唉！！！
 
-5. 放弃后的第一次站起，继续搞起
+5. 放弃后的第一次站起，继续搞起。
 
-   - 既然群里没找到答案，继续自力更生吧
+   - 既然群里没找到答案，继续自力更生吧。
 
-   - 分析一波现状
+   - 分析一波现状。
 
-   - Fluent-bit日志报错关键词**failed to flush chunk**，ElasticSearch日志报错关键词**java.lang.IllegalArgumentException: invalid version format**和**java.lang.IllegalArgumentException: text is empty**。
+   - Fluent-bit 日志报错关键词 **failed to flush chunk**，ElasticSearch 日志报错关键词 **java.lang.IllegalArgumentException: invalid version format** 和 **java.lang.IllegalArgumentException: text is empty**。
 
    - ```yaml
      [2022-04-22T09:57:10,374][DEBUG][r.suppressed             ] [es-node-0] path: /bad-request, params: {}
      java.lang.IllegalArgumentException: invalid version format: C1®Þ\_¾L6Q>À,À0©Ì¨ÌªÀ+À/$À(KÀ#À'GÀ
              at io.netty.handler.codec.http.HttpVersion.<init>(HttpVersion.java:116) ~[netty-codec-http-4.1.66.Final.jar:4.1.66.Final]
-             
+  
      [2022-04-22T09:55:06,379][DEBUG][r.suppressed             ] [es-node-0] path: /bad-request, params: {}
      java.lang.IllegalArgumentException: text is empty (possibly HTTP/0.9)
              at io.netty.handler.codec.http.HttpVersion.valueOf(HttpVersion.java:65) ~[netty-codec-http-4.1.66.Final.jar:4.1.66.Final]
      ```
 
-   - Fluent-bit报错**failed to flush chunk**说明连接elasticsearch失败。
+   - Fluent-bit 报错 **failed to flush chunk** 说明连接 elasticsearch 失败。
 
-   - ElasticSearch端的两个报错，说明Fluent-bit连接请求过来了，但是因为某种原因导致了ElasticSearch报错了。看报错应该是传递过来的数据不被ElasticSearch认可，也就是**invalid version format**和**text is empty**。
+   - ElasticSearch 端的两个报错，说明 Fluent-bit 连接请求过来了，但是因为某种原因导致了 ElasticSearch 报错了。看报错应该是传递过来的数据不被 ElasticSearch 认可，也就是 **invalid version format** 和 **text is empty**。
 
-   - 我之前在两边开**Trace**，也是为了找到Fluent-bit传递了啥，ElasticSeach到底收了啥，但是两端都没有详细结果。
+   - 我之前在两边开 **Trace**，也是为了找到 Fluent-bit 传递了啥，ElasticSeach 到底收了啥，但是两端都没有详细结果。
 
-   - 排查到现在我一直是在es采用https**协议并配置了认证的场景中测试的，我感觉这个问题可能出在https认证上，为了验证我的想法，我们将es改为http的协议，并取消认证
+   - 排查到现在我一直是在 es 采用 **https**协议并配置了认证的场景中测试的，我感觉这个问题可能出在 https 认证上，为了验证我的想法，我们将 es 改为 http 的协议，并取消认证。
 
-6. 将es改为http协议，验证一下KubeSphere日志系统是否正常
+6. 将 es 改为 http 协议，验证一下 KubeSphere 日志系统是否正常。
 
-   - 将kubesphere的日志系统停用，删除Fluent-bit的相关配置项
+   - 将 kubesphere 的日志系统停用，删除 Fluent-bit 的相关配置项
 
-   - **平台管理**->**集群管理**->**CRD**,搜索**ClusterConfiguration**，编辑**ks-installer**,按下面的修改后，点击确定。
+   - **平台管理**->**集群管理**->**CRD**, 搜索 **ClusterConfiguration**，编辑 **ks-installer**, 按下面的修改后，点击确定。
 
    - ```yaml
      auditing:
        enabled: false
-      
+  
      events:
        enabled: false
-      
+  
      logging:
        containerruntime: docker
        enabled: false
@@ -2976,13 +2963,13 @@ journalctl -u elasticsearch.service
          replicas: 2
      ```
 
-   - 打开工具箱中的kubectl工具，执行下面的命令观察执行过程，等待任务完成，细节不说了，上面都有。
+   - 打开工具箱中的 kubectl 工具，执行下面的命令观察执行过程，等待任务完成，细节不说了，上面都有。
 
    - ```shell
      / # kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath='{.items[0].metadata.name}') -f
      ```
 
-   - 执行完了，我们看看KubeSphere有啥变化，我预期的是跟这几个日志组件有关的服务配置都应该删除了才对。
+   - 执行完了，我们看看 KubeSphere 有啥变化，我预期的是跟这几个日志组件有关的服务配置都应该删除了才对。
 
    - 但是，事与愿违，好像什么都没发生，之前的几个主角还在呢。至于为什么，暂时不要问我啊，我也不知道。。。
 
@@ -2994,13 +2981,13 @@ journalctl -u elasticsearch.service
 
    - ![kubesphere-daemonsets-flunet-bit-7](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-7.png)
 
-   - **工具箱**中的容器日志查询也都在呢，只是报错不一样了，这个问题据说要重启ks-apiserver解决，暂时咱不管他。
+   - **工具箱**中的容器日志查询也都在呢，只是报错不一样了，这个问题据说要重启 ks-apiserver 解决，暂时咱不管他。
 
    - ![kubesphere-daemonsets-flunet-bit-8](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-8.png)
 
-   - 没办法了，为了实验的准确性我只能强制赶你们走了，手动的把Fluent-bit的operator和守护进程集删掉，直接界面执行操作，比较简单，不截图了
+   - 没办法了，为了实验的准确性我只能强制赶你们走了，手动的把 Fluent-bit 的 operator 和守护进程集删掉，直接界面执行操作，比较简单，不截图了。
 
-   - 再把**CRD**中的**Output**和**Input**资源也删掉。
+   - 再把 **CRD** 中的 **Output** 和 **Input** 资源也删掉。
 
    - ![kubesphere-crd-delete-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-delete-1.png)
 
@@ -3010,7 +2997,7 @@ journalctl -u elasticsearch.service
 
    - ![kubesphere-crd-delete-4](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-delete-4.png)
 
-   - 执行完上面的删除操作以后，我们会发现界面开始有了一些变化（也不排除是早期的操作延时导致的，先不深究了，可能以后也不会原因深究）
+   - 执行完上面的删除操作以后，我们会发现界面开始有了一些变化（也不排除是早期的操作延时导致的，先不深究了，可能以后也不会原因深究）。
 
    - ![kubesphere-crd-delete-5](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-crd-delete-5.png)
 
@@ -3018,107 +3005,107 @@ journalctl -u elasticsearch.service
 
    - 其实，测试验证的环境不删也就不删了，改改配置也是可以的，只是突然强迫症犯了，必须干掉。
 
-   - 确认全部删除后，我们开始重装ElasticSearch
+   - 确认全部删除后，我们开始重装 ElasticSearch。
 
-   - 利用ansible重新配置elasticsearch（仅限于测试验证环境，有数据的生产环境就不要瞎搞了）
+   - 利用 ansible 重新配置 elasticsearch（仅限于测试验证环境，有数据的生产环境就不要瞎搞了）。
 
    - ```shell
-     # 利用ansible卸载旧的elasticsearch并删除数据
+     # 利用 ansible 卸载旧的 elasticsearch 并删除数据
      [root@zdevops-master ~]# cd /data/ansible/ansible-zdevops/inventories/dev
      [root@zdevops-master dev]# source /opt/ansible2.8/bin/activate
      (ansible2.8) [root@zdevops-master dev]# ansible es -m shell -a 'systemctl stop elasticsearch'
      (ansible2.8) [root@zdevops-master dev]# ansible es -m shell -a 'yum remove -y elasticsearch'
      (ansible2.8) [root@zdevops-master dev]# ansible es -m file -a 'path=/data/elasticsearch state=absent'
      (ansible2.8) [root@zdevops-master dev]# ansible es -m file -a 'path=/etc/elasticsearch state=absent'
-     
-     # 利用ansible-playbook安装http模式的elasticsearch，注意-e重新定义变量elasticsearch_xpack_security_enabled的值为false
-     
+  
+     # 利用 ansible-playbook 安装 http 模式的 elasticsearch，注意-e 重新定义变量 elasticsearch_xpack_security_enabled 的值为 false
+  
      (ansible2.8) [root@zdevops-master dev]# ansible-playbook -e elasticsearch_xpack_security_enabled=false ../../playbooks/deploy-elasticsearch.yaml 
      /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
        from cryptography.exceptions import InvalidSignature
-     
-     PLAY [安装配置ElasticSearch.] ********************************************************************************
-     
-     TASK [01-配置yum源-配置elasticsearch软件源.] *********************************************************************
+  
+     PLAY [安装配置 ElasticSearch.] ********************************************************************************
+  
+     TASK [01-配置 yum 源-配置 elasticsearch 软件源 .] *********************************************************************
      ok: [es-node-1]
      ok: [es-node-0]
      ok: [es-node-2]
-     
-     TASK [02-安装elasticsearch.] *******************************************************************************
+  
+     TASK [02-安装 elasticsearch.] *******************************************************************************
      changed: [es-node-2]
      changed: [es-node-1]
      changed: [es-node-0]
-     
-     TASK [03-创建elasticsearch配置文件.] ***************************************************************************
+  
+     TASK [03-创建 elasticsearch 配置文件 .] ***************************************************************************
      changed: [es-node-0]
      changed: [es-node-2]
      changed: [es-node-1]
-     
-     TASK [04-创建elasticsearch数据文件目录.] *************************************************************************
+  
+     TASK [04-创建 elasticsearch 数据文件目录 .] *************************************************************************
      changed: [es-node-0]
      changed: [es-node-2]
      changed: [es-node-1]
-     
-     PLAY [安装配置ElasticSearch SSL认证.] **************************************************************************
-     
-     TASK [01-生成ElasticSearch Instance文件用来配置ssl证书.] ***********************************************************
+  
+     PLAY [安装配置 ElasticSearch SSL 认证 .] **************************************************************************
+  
+     TASK [01-生成 ElasticSearch Instance 文件用来配置 ssl 证书 .] ***********************************************************
      skipping: [es-node-0]
-     
-     TASK [02-生成证书.] ******************************************************************************************
+  
+     TASK [02-生成证书 .] ******************************************************************************************
      skipping: [es-node-0]
-     
-     TASK [03-安装基本工具包.] ***************************************************************************************
+  
+     TASK [03-安装基本工具包 .] ***************************************************************************************
      skipping: [es-node-0] => (item=[]) 
-     
-     TASK [04-解压cert文件.] **************************************************************************************
+  
+     TASK [04-解压 cert 文件 .] **************************************************************************************
      skipping: [es-node-0]
-     
-     TASK [05-从服务器获取cert配置文件.] ********************************************************************************
+  
+     TASK [05-从服务器获取 cert 配置文件 .] ********************************************************************************
      skipping: [es-node-0] => (item=es-node-0) 
      skipping: [es-node-0] => (item=es-node-1) 
      skipping: [es-node-0] => (item=es-node-2) 
-     
-     PLAY [认证配置.] *********************************************************************************************
-     
-     TASK [01-创建elasticsearch cert目录.] ************************************************************************
+  
+     PLAY [认证配置 .] *********************************************************************************************
+  
+     TASK [01-创建 elasticsearch cert 目录 .] ************************************************************************
      skipping: [es-node-0]
      skipping: [es-node-1]
      skipping: [es-node-2]
-     
-     TASK [02-同步cert文件.] **************************************************************************************
+  
+     TASK [02-同步 cert 文件 .] **************************************************************************************
      skipping: [es-node-0]
      skipping: [es-node-1]
      skipping: [es-node-2]
-     
-     TASK [03-生成keystore文件.] **********************************************************************************
+  
+     TASK [03-生成 keystore 文件 .] **********************************************************************************
      skipping: [es-node-0]
      skipping: [es-node-1]
      skipping: [es-node-2]
-     
-     TASK [04-添加配置项到keystore文件.] ******************************************************************************
+  
+     TASK [04-添加配置项到 keystore 文件 .] ******************************************************************************
      skipping: [es-node-0]
      skipping: [es-node-1]
      skipping: [es-node-2]
-     
-     TASK [05-创建用户并指定superuser权限.] ****************************************************************************
+  
+     TASK [05-创建用户并指定 superuser 权限 .] ****************************************************************************
      skipping: [es-node-0]
      skipping: [es-node-1]
      skipping: [es-node-2]
-     
-     PLAY [终极配置.] *********************************************************************************************
-     
-     TASK [01-启动并设置开机自动启动elasticsearch服务.] ********************************************************************
+  
+     PLAY [终极配置 .] *********************************************************************************************
+  
+     TASK [01-启动并设置开机自动启动 elasticsearch 服务 .] ********************************************************************
      changed: [es-node-1]
      changed: [es-node-2]
      changed: [es-node-0]
-     
+  
      PLAY RECAP ***********************************************************************************************
      es-node-0                  : ok=5    changed=4    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   
      es-node-1                  : ok=5    changed=4    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   
      es-node-2                  : ok=5    changed=4    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   
      ```
-     
-   - 查看ElasticSearch集群初始分片信息
+
+   - 查看 ElasticSearch 集群初始分片信息。
 
    - ```shell
      [root@glusterfs-node-0 ~]# curl  192.168.9.97:9200/_cat/indices?v
@@ -3126,7 +3113,7 @@ journalctl -u elasticsearch.service
      green  open   .geoip_databases DUibpJGVR66YyMiMxiUYpw   1   1          8            0     14.1mb            7mb
      ```
 
-   - **平台管理**->**集群管理**->**CRD**,搜索**ClusterConfiguration**，编辑**ks-installer**,按下面的修改后，点击确定。
+   - **平台管理**->**集群管理**->**CRD**, 搜索 **ClusterConfiguration**，编辑 **ks-installer**, 按下面的修改后，点击确定。
 
    - ```yaml
      auditing:
@@ -3142,7 +3129,7 @@ journalctl -u elasticsearch.service
        logMaxAge: 7
      events:
        enabled: true
-      
+  
      logging:
        containerruntime: docker
        enabled: true
@@ -3151,7 +3138,7 @@ journalctl -u elasticsearch.service
          replicas: 2
      ```
 
-   - 打开工具箱中的kubectl工具，执行下面的命令观察执行过程，等待任务完成，细节不说了，上面都有。
+   - 打开工具箱中的 kubectl 工具，执行下面的命令观察执行过程，等待任务完成，细节不说了，上面都有。
 
    - ```shell
      / # kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l app=ks-install -o jsonpath='{.items[0].metadata.name}') -f
@@ -3159,17 +3146,17 @@ journalctl -u elasticsearch.service
 
    - 执行完以后，正常的话我们之前操作的资源应该都回归了，**Output**、**Input**、**Fluent-bit**，**工具箱里的工具**不截图了自己看一下吧。
 
-   - 但是我们会发现**Fluent-bit**的pod中还有如下报错
+   - 但是我们会发现 **Fluent-bit** 的 pod 中还有如下报错。
 
    - ```yaml
      [2022/04/22 15:20:20] [ warn] [net] getaddrinfo(host='elasticsearch-logging-data.kubesphere-logging-system.svc', err=4): Domain name not found
-     
+  
      [2022/04/22 15:20:20] [ warn] [net] getaddrinfo(host='elasticsearch-logging-data.kubesphere-logging-system.svc', err=4): Domain name not found
      ```
 
-   - 看到这个知道怎么搞了吧？不知道？？？去上面翻翻
+   - 看到这个知道怎么搞了吧？不知道？？？去上面翻翻。
 
-   - 依次修改**Output**中的**es**、**es-auditing**、**es-events**，改后如下：
+   - 依次修改 **Output** 中的 **es**、**es-auditing**、**es-events**，改后如下：
 
    - ```yaml
      apiVersion: logging.kubesphere.io/v1alpha2
@@ -3238,214 +3225,212 @@ journalctl -u elasticsearch.service
        match: kube_events
      ```
 
-   - 再去查看Fluent-bit容器的日志，你会发现Fluent-bit内部发现了配置文件的变化，并重启了**Fluent Bit**服务，且容器并没有重建。
+   - 再去查看 Fluent-bit 容器的日志，你会发现 Fluent-bit 内部发现了配置文件的变化，并重启了 **Fluent Bit** 服务，且容器并没有重建。
 
    - ```yaml
       [2022/04/22 15:27:04] [engine] caught signal (SIGTERM)
-       
+   
       [2022/04/22 15:27:04] [ info] [input] pausing systemd.0
-       
+   
       [2022/04/22 15:27:04] [ info] [input] pausing systemd.1
-       
+   
       [2022/04/22 15:27:04] [ info] [input] pausing tail.2
-       
+   
       [2022/04/22 15:27:04] [ info] [input] pausing tail.3
-       
+   
       [2022/04/22 15:27:04] [ info] [input] pausing tail.4
-       
+   
       level=info msg="Config file changed, stopping Fluent Bit"
-       
+   
       level=info msg="Killed Fluent Bit"
-       
+   
       level=info msg="Config file changed, stopped Fluent Bit"
-       
+   
       level=info msg="Config file changed, stopping Fluent Bit"
-       
+   
       [2022/04/22 15:27:04] [ warn] [engine] service will stop in 5 seconds
-       
+   
       level=info msg="Killed Fluent Bit"
-       
+   
       level=info msg="Config file changed, stopped Fluent Bit"
-       
+   
       level=info msg="Config file changed, stopping Fluent Bit"
-       
+   
       level=info msg="Killed Fluent Bit"
-       
+   
       level=info msg="Config file changed, stopped Fluent Bit"
-       
+   
       [2022/04/22 15:27:09] [ info] [engine] service stopped
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=416649 watch_fd=1
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=461549 watch_fd=2
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134582558 watch_fd=3
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134581715 watch_fd=4
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268955529 watch_fd=5
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373423 watch_fd=6
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373208 watch_fd=7
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403716654 watch_fd=8
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134583208 watch_fd=9
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134583458 watch_fd=10
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=269010417 watch_fd=11
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=269628719 watch_fd=12
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403995814 watch_fd=13
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=962171 watch_fd=14
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134583441 watch_fd=15
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134580575 watch_fd=16
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268955289 watch_fd=17
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403715964 watch_fd=18
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403855647 watch_fd=19
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=413299 watch_fd=20
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=375870 watch_fd=21
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134581094 watch_fd=22
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=463110 watch_fd=23
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=135190584 watch_fd=24
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134738131 watch_fd=25
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268956011 watch_fd=26
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373969 watch_fd=27
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403792092 watch_fd=28
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=412431 watch_fd=29
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134738124 watch_fd=30
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=467559 watch_fd=31
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403860482 watch_fd=32
-       
+   
       [2022/04/22 15:27:09] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=997586 watch_fd=33
-       
+   
       level=error msg="Fluent bit exited" error=null
-       
+   
       level=info msg=backoff delay=1s
-       
+   
       level=info msg="backoff timer done" actual=1.00029973s expected=1s
-       
+   
       level=info msg="Fluent bit started"
-       
+   
       Fluent Bit v1.8.3
-       
+   
       * Copyright (C) 2019-2021 The Fluent Bit Authors
-       
+   
       * Copyright (C) 2015-2018 Treasure Data
-       
+   
       * Fluent Bit is a CNCF sub-project under the umbrella of Fluentd
-       
+   
       * https://fluentbit.io
-       
-      
-       
+   
       [2022/04/22 15:27:10] [ info] [engine] started (pid=30)
-       
+   
       [2022/04/22 15:27:10] [ info] [storage] version=1.1.1, initializing...
-       
+   
       [2022/04/22 15:27:10] [ info] [storage] in-memory
-       
+   
       [2022/04/22 15:27:10] [ info] [storage] normal synchronization mode, checksum disabled, max_chunks_up=128
-       
+   
       [2022/04/22 15:27:10] [ info] [cmetrics] version=0.1.6
-       
+   
       [2022/04/22 15:27:10] [ info] [input:systemd:systemd.0] seek_cursor=s=5d0022eeaf454ba8a40dde2836de2f4d;i=b56... OK
-       
+   
       [2022/04/22 15:27:10] [ info] [input:systemd:systemd.1] seek_cursor=s=5d0022eeaf454ba8a40dde2836de2f4d;i=b5b... OK
-       
+   
       [2022/04/22 15:27:10] [ info] [filter:kubernetes:kubernetes.4] https=1 host=kubernetes.default.svc port=443
-       
+   
       [2022/04/22 15:27:10] [ info] [filter:kubernetes:kubernetes.4] local POD info OK
-       
+   
       [2022/04/22 15:27:10] [ info] [filter:kubernetes:kubernetes.4] testing connectivity with API server...
-       
+   
       [2022/04/22 15:27:10] [ info] [filter:kubernetes:kubernetes.4] connectivity OK
-       
+   
       [2022/04/22 15:27:10] [ info] [sp] stream processor started
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=416649 watch_fd=1 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_alertmanager-1a71f1d5b1136320644f3289e4b22544620db4a0d35a1ffec52bc534d729c358.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=461549 watch_fd=2 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_config-reloader-bc14c53008f1e800d6240a5b912239a3d5682c6dcb719f48c69b7e8ba5892e35.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134582558 watch_fd=3 name=/var/log/containers/calico-kube-controllers-75ddb95444-8xvf4_kube-system_calico-kube-controllers-dc90044aa0ce62e61dfb0842c8f2e5aa8d021738adffca847b003a5c9621512c.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268955529 watch_fd=4 name=/var/log/containers/calico-node-pzvrj_kube-system_flexvol-driver-abf59d8a7af22c683dfb0776a0835c719f41ef23446e912f82901a4fd9cf166f.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373423 watch_fd=5 name=/var/log/containers/calico-node-pzvrj_kube-system_install-cni-b3d49f2e9c03e63c3863d50365d2ade01dead979c90285c526ac0029b58411cd.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373208 watch_fd=6 name=/var/log/containers/calico-node-pzvrj_kube-system_upgrade-ipam-6d4425d7ea5302511df1c278f2b113ac8fdfa0a372e07b025e0a9b45d30129ac.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403716654 watch_fd=7 name=/var/log/containers/coredns-5495dd7c88-68k9b_kube-system_coredns-879c087a4c8717d0886e6603a63e9503a406d215cfe77941cbcc1cc7c138d010.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583208 watch_fd=8 name=/var/log/containers/coredns-5495dd7c88-z9q6j_kube-system_coredns-80cd4427410de02465b415683817a75674a95777ffc0929f93e87506b120ca59.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583458 watch_fd=9 name=/var/log/containers/ks-apiserver-5c68568694-w8xs6_kubesphere-system_ks-apiserver-b76c824251f298a17d7594eea392602cea7291e1b3e35ae35cefb4607e6e4cdf.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=269010417 watch_fd=10 name=/var/log/containers/ks-console-65f4d44d88-hzw9b_kubesphere-system_ks-console-f600455c3af064c53adc8eb7e5412505c4d0e50362ab11b8e59d2e71b552b0f1.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=269628719 watch_fd=11 name=/var/log/containers/ks-controller-manager-bf6b9bfb5-xfts6_kubesphere-system_ks-controller-manager-9c24833ae6bce8c0ff956db38b40d9acf0224ec364c317ebcefc7802d4d97855.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403995814 watch_fd=12 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_config-reloader-2d51bab0babdd47864ec235efdbd69d2075cc8bf72c3642449be69f68aa1f0d5.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=962171 watch_fd=13 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_events-ruler-da24092a12c4fc0d0aab8a02c7fc7cb1e0e82d15a924717222bdbadee7935c84.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134580575 watch_fd=14 name=/var/log/containers/kube-controller-manager-ks-k8s-master-0_kube-system_kube-controller-manager-a07d1c5ed4108d98de2ba322b47939d5007c9d266a4ff558d57ec87ab10b2d54.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268955289 watch_fd=15 name=/var/log/containers/kube-proxy-bc59k_kube-system_kube-proxy-79144efa6b42a0f9636132538cc4ade6665269fea5903f3e1e0be05f14376d7c.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403715964 watch_fd=16 name=/var/log/containers/kube-scheduler-ks-k8s-master-0_kube-system_kube-scheduler-1a2ffcf4000a9bb0fa526fcfa1970e69465dfe0bb4c635a4d95f50f2e27ef763.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403855647 watch_fd=17 name=/var/log/containers/minio-859cb4d777-mpsk9_kubesphere-system_minio-d76f9516fa485cd24851afccfb2c85fd74ce894ba580af98703704860e1c00ed.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=413299 watch_fd=18 name=/var/log/containers/node-exporter-wwrpf_kubesphere-monitoring-system_kube-rbac-proxy-e35229db1e46e8b7b0a7d5a3cd581107102a3531b31d2e32d7e787a118c82896.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=375870 watch_fd=19 name=/var/log/containers/node-exporter-wwrpf_kubesphere-monitoring-system_node-exporter-e5cc5a4cc937cf9de149dd25bd6e8441ca176bf26cb2a214dd0b47627e7d8861.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134581094 watch_fd=20 name=/var/log/containers/nodelocaldns-sp59h_kube-system_node-cache-8b5bdf5a116af255f979a4a349c168257b632d24805d5f257a642dd97b0d53a1.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=463110 watch_fd=21 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_config-reloader-1378a8d9cd7a96334cb15adeafb468497ece0a9a600a3193fb80b60bc5b7e9b5.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=135190584 watch_fd=22 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_prometheus-26e94cf0828cd1bd9c5da45217b7f3e654a7a41ce0dc5943375b1644d1a6a002.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134738131 watch_fd=23 name=/var/log/containers/prometheus-k8s-0_kubesphere-monitoring-system_prometheus-97de8b484747bae4aeac54ffd9b75c1ddc9582a28c768ebc9be395390bd031c3.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268956011 watch_fd=24 name=/var/log/containers/redis-ha-haproxy-868fdbddd4-kqrl5_kubesphere-system_config-init-0fb775710352218a66aec02ea2a736892c33df43dd4206e155e0bce6af4aba63.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373969 watch_fd=25 name=/var/log/containers/redis-ha-haproxy-868fdbddd4-kqrl5_kubesphere-system_haproxy-6c15749c02904875f5c1a280a42a908baa074ccffd3365f40b2692b6fe60acf5.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403792092 watch_fd=26 name=/var/log/containers/redis-ha-server-2_kubesphere-system_config-init-fa7c66040a53bef1c3c9b1844a4b25870835a6147cd83abf914ebb129a036536.log
-       
+   
       [2022/04/22 15:27:10] [ info] [input:tail:tail.2] inotify_fs_add(): inode=412431 watch_fd=27 name=/var/log/containers/redis-ha-server-2_kubesphere-system_redis-6b19bb18f79c55c
-       
+   
      ```
 
    - ![kubesphere-daemonsets-flunet-bit-9](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-daemonsets-flunet-bit-9.png)
 
-   - 分析日志发现，Fluent-bit端没有错误信息了，再去ElasticSearch中查看索引。
+   - 分析日志发现，Fluent-bit 端没有错误信息了，再去 ElasticSearch 中查看索引。
 
-   - **她来了她真的来了**,真xxx不容易。
+   - **她来了她真的来了**, 真 xxx 不容易。
 
    - ```yaml
      [root@glusterfs-node-0 ~]# curl  192.168.9.97:9200/_cat/indices?v
@@ -3456,7 +3441,7 @@ journalctl -u elasticsearch.service
      green  open   ks-logstash-events-2022.04.22   AafsMv0bRd-xz_Uj_HlOag   1   1         10            0    149.5kb         74.6kb
      ```
 
-   - 再回来看看我们KubeSphere工具箱中的几个分析工具是否正常了？
+   - 再回来看看我们 KubeSphere 工具箱中的几个分析工具是否正常了？
 
    - ![kubesphere-toolbox](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-toolbox.png)
 
@@ -3466,11 +3451,11 @@ journalctl -u elasticsearch.service
 
    - ![kubesphere-toolbox-analysis-tools-event](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-toolbox-analysis-tools-event.png)
 
-   - 三个查询工具还是有异常弹窗，不过不用这个问题如何处理，我也是心中有数的。
+   - 三个查询工具还是有异常弹窗，不慌！这个问题如何处理，我也是心中有数的。
 
-   - 这几天可不是白混的，论坛文档没少看，来打开kubesphere官方论坛，需要找到两篇文档结合来处理。
+   - 这几天可不是白混的，论坛文档没少看，来打开 kubesphere 官方论坛，需要找到两篇文档结合来处理。
 
-   - 打开[在使用kusphere的操作审计功能时，总有弹窗提示：dial tcp: lookup http on 10.96.0.10:53: no such host](https://kubesphere.com.cn/forum/d/2450-kuspheredial-tcp-lookup-http-on-109601053-no-such-host/4)，找到修改配置文件的命令（其实吧你改界面也行）
+   - 打开[在使用 kusphere 的操作审计功能时，总有弹窗提示：dial tcp: lookup http on 10.96.0.10:53: no such host](https://kubesphere.com.cn/forum/d/2450-kuspheredial-tcp-lookup-http-on-109601053-no-such-host/4)，找到修改配置文件的命令（其实吧你改界面也行）
 
    - ![image-20220422235234281](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220422235234281.png)
 
@@ -3495,21 +3480,20 @@ journalctl -u elasticsearch.service
                secret: kubesphere
                redirectURIs:
                - '*'
-     
+  
          ldap:
            host: openldap.kubesphere-system.svc:389
            managerDN: cn=admin,dc=kubesphere,dc=io
            managerPassword: admin
            userSearchBase: ou=Users,dc=kubesphere,dc=io
            groupSearchBase: ou=Groups,dc=kubesphere,dc=io
-     
+  
          redis:
            host: redis.kubesphere-system.svc
            port: 6379
            password: KUBESPHERE_REDIS_PASSWORD
            db: 0
-     
-     
+  
          s3:
            endpoint: http://minio.kubesphere-system.svc:9000
            region: us-east-1
@@ -3518,7 +3502,7 @@ journalctl -u elasticsearch.service
            accessKeyID: openpitrixminioaccesskey
            secretAccessKey: openpitrixminiosecretkey
            bucket: s2i-binaries
-     
+  
          network:
            ippoolType: none
          devops:
@@ -3557,13 +3541,12 @@ journalctl -u elasticsearch.service
            webhookURL: https://kube-auditing-webhook-svc.kubesphere-logging-system.svc:6443/audit/webhook/event
            host: http://elasticsearch-logging-data.kubesphere-logging-system.svc:9200
            indexPrefix: ks-logstash-auditing
-     
+  
          alerting:
            prometheusEndpoint: http://prometheus-operated.kubesphere-monitoring-system.svc:9090
            thanosRulerEndpoint: http://thanos-ruler-operated.kubesphere-monitoring-system.svc:10902
            thanosRuleResourceLabels: thanosruler=thanos-ruler,role=thanos-alerting-rules
-     
-     
+  
          gateway:
            watchesPath: /var/helm-charts/watches.yaml
            repository: kubesphere/nginx-ingress-controller
@@ -3581,14 +3564,14 @@ journalctl -u elasticsearch.service
        uid: 2d45c34b-bc9d-43bd-a3d3-37b294393531
      ```
 
-   - 知道重点是啥了吧，把它**http://elasticsearch-logging-data.kubesphere-logging-system.svc:9200**全改成实际的**ElasticSearch**的地址
+   - 知道重点是啥了吧，把它 **http://elasticsearch-logging-data.kubesphere-logging-system.svc:9200** 全改成实际的 **ElasticSearch** 的地址
 
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl edit configmap kubesphere-config -n kubesphere-system
      configmap/kubesphere-config edited
-     
+  
      # 可以在编辑模式使用 %s/elasticsearch-logging-data.kubesphere-logging-system.svc/192.168.9.95/g 批量替换
-     
+  
      # 实际修改内容如下
      logging:
        host: http://192.168.9.95:9200
@@ -3603,19 +3586,19 @@ journalctl -u elasticsearch.service
        indexPrefix: ks-logstash-auditing
      ```
 
-   - 改完以后我发现，好像没啥变化，报错依旧。不过此时我已经不慌了。
+   - 改完以后我发现，好像没啥变化，报错依旧。不过此时我也是不慌的。
 
-   - 继续打开第二篇文档，[使用外部es的问题](https://kubesphere.com.cn/forum/d/6614-es),重点在图片上，红色字体的描述，这里提到了需要重启ks-apiserver才可以。
+   - 继续打开第二篇文档，[使用外部 es 的问题](https://kubesphere.com.cn/forum/d/6614-es), 重点在图片上，红色字体的描述，这里提到了需要重启 ks-apiserver 才可以。
 
    - ![image-20220423001514866](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220423001514866.png)
 
-   - 我们再看看ks-apiserver的配置，确定也挂载了kubesphere-config。
+   - 我们再看看 ks-apiserver 的配置，确定也挂载了 kubesphere-config。
 
    - ![kubesphere-ks-apiserver-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-ks-apiserver-2.png)
 
-   - 我来重启一下ks-apiserver控制台，验证一下真伪。
+   - 我来重启一下 ks-apiserver 控制台，验证一下真伪。
 
-   - 控制台，**集群管理**->**应用负载**->**工作负载**->**部署**->**ks-apiserver**,重启。
+   - 控制台，**集群管理**->**应用负载**->**工作负载**->**部署**->**ks-apiserver**, 重启。
 
    - ![kubesphere-ks-apiserver-0](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-ks-apiserver-0.png)
 
@@ -3625,7 +3608,7 @@ journalctl -u elasticsearch.service
 
    - ![kubesphere-toolbox-analysis-tools-containe-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-toolbox-analysis-tools-containe-1.png)
 
-   - 输入一个关键词，查询一下看看具体效果，而且从搜索框中还可以看到kubesphere日志系统支持的查询粒度。
+   - 输入一个关键词，查询一下看看具体效果，而且从搜索框中还可以看到 kubesphere 日志系统支持的查询粒度。
 
    - ![kubesphere-toolbox-analysis-tools-container-2](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-toolbox-analysis-tools-container-2.png)
 
@@ -3635,36 +3618,36 @@ journalctl -u elasticsearch.service
 
    - ![kubesphere-toolbox-analysis-tools-audit-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-toolbox-analysis-tools-audit-1.png)
 
-   - 至此，KubeSphere日志系统对接外部基于Http协议的ElasticSearch集群算是彻底完成了，该有的都有了，至于后面的使用效果，那只能线上持续观测了。
+   - 至此，KubeSphere 日志系统对接外部基于 Http 协议的 ElasticSearch 集群算是彻底完成了，该有的都有了，至于后面的使用效果，那只能线上持续观测了。
 
-   - 但是你们以为这就完了，打完收工么，想啥呢，还有一个大坑没填呢，HTTPS的ElasticSearch还没搞定呢，继续搞它。
+   - 但是你们以为这就完了，打完收工么，想啥呢，还有一个大坑没填呢，HTTPS 的 ElasticSearch 还没搞定呢，继续搞它。
 
-7. 继续我们的ElasticSearch的HTTPS配置之旅
+7. 继续我们的 ElasticSearch 的 HTTPS 配置之旅。
 
-   - 通过上面的过程我们应该可以断定，KubeSphere部署的fluent-bit对接http协议的ES是没有任何问题的，那问题就是出在https协议上。我们换个思路，先跑掉Kubesphere不说，先去看看原生的Fluent-bit对接https协议的es有啥套路
-   
-   - 搜索关键词**fluent-bit https elasticsearch**
-   
-   - 各种搜索引擎都尝试过，都是大同小异，无非就是关掉tls验证，有的文档还提到了加上ca的配置。并没有解决问题的思路和方案（此时我还没有醒悟，我一开始方向就错了，后面细说），也就懒得截图了。
-   
-   - 上面的关键词不行，我又换了一个思路**fluent-bit x-pack elasticsearch**，毕竟我们的安全验证是启用了x-pack插件。
-   
+   - 通过上面的过程我们应该可以断定，KubeSphere 部署的 fluent-bit 对接 http 协议的 ES 是没有任何问题的，那问题就是出在 https 协议上。我们换个思路，先跑掉 Kubesphere 不说，先去看看原生的 Fluent-bit 对接 https 协议的 es 有啥套路。
+
+   - 搜索关键词 **fluent-bit https elasticsearch**。
+
+   - 各种搜索引擎都尝试过，都是大同小异，无非就是关掉 tls 验证，有的文档还提到了加上 ca 的配置。并没有解决问题的思路和方案（**此时我还没有醒悟**，我一开始方向就错了，后面细说），也就懒得截图了。
+
+   - 上面的关键词不行，我又换了一个思路 **fluent-bit x-pack elasticsearch**，毕竟我们的安全验证是启用了 x-pack 插件。
+
    - 哈哈哈哈，别说我还真找到一篇有意义并帮我最终解决问题的文档，那就是[它](https://vqiu.cn/efk-kube/)
-   
+
    - ![image-20220428110517048](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220428110517048.png)
-   
-   - 此文档介绍的都是在k8s安装es，但是这个不重要，配置文件都是有参考意义的，看看他的配置文件：
-   
+
+   - 此文档介绍的都是在 k8s 安装 es，但是这个不重要，配置文件都是有参考意义的，看看他的配置文件：
+
    - ![image-20220428110847858](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220428110847858.png)
-   
-   - 看到这个配置文件，我突然灵光一闪，这个配置里没有tls什么事啊。此时，我才幡然醒悟，其实我要的并不是https并不是tls，我要的其实就是个**http协议加上用户名和密码验证**，这才是我真正的需求。
-   
-   - 我一开始就走错了路，被**ClusterConfiguration**中的这个参数**externalElasticsearchProtocol: https**给坑了，此时我已经忘记从哪里看到的文档需要配置这个参数了，我是一个不记仇的人，我就不找后帐了。
-   
+
+   - 看到这个配置文件，我突然灵光一闪，这个配置里没有 tls 什么事啊。此时，我才幡然醒悟，其实我要的并不是 https 并不是 tls，我要的其实就是个 **http 协议加上用户名和密码验证**，这才是我真正的需求。
+
+   - 我一开始就走错了路，被 **ClusterConfiguration** 中的这个参数 **externalElasticsearchProtocol: https** 给坑了，此时我已经忘记从哪里看到的文档需要配置这个参数了，我是一个不记仇的人，我就不找后账了。
+
    - 思路有了，来我们验证一波。
-   
-   - 先**ClusterConfiguration**->**ks-installer**,编辑YAML。确保配置文件中es的配置如下，如果存在**externalElasticsearchProtocol: https**一定要干掉它。
-   
+
+   - 先 **ClusterConfiguration**->**ks-installer**, 编辑 YAML。确保配置文件中 es 的配置如下，如果存在 **externalElasticsearchProtocol: https** 一定要干掉它。
+
    - ```yaml
      es:
        basicAuth:
@@ -3675,11 +3658,11 @@ journalctl -u elasticsearch.service
        externalElasticsearchHost: 192.168.9.95
        externalElasticsearchPort: 9200
        logMaxAge: 7
-   
+
    - 修改完成后，点击**确定**，等待后台重新配置完成。
-   
-   - 再去查看**Output**的几个配置文件，**es**、**es-auditing**、**es-events**具体如下
-   
+
+   - 再去查看 **Output** 的几个配置文件，**es**、**es-auditing**、**es-events** 具体如下
+
    - ```yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Output
@@ -3711,9 +3694,9 @@ journalctl -u elasticsearch.service
          port: 9200
          timeKey: '@timestamp'
        matchRegex: '(?:kube|service)\.(.*)'
-     
+  
      ```
-   
+
    - ```yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Output
@@ -3745,7 +3728,7 @@ journalctl -u elasticsearch.service
          port: 9200
        match: kube_auditing
      ```
-   
+
    - ```yaml
      apiVersion: logging.kubesphere.io/v1alpha2
      kind: Output
@@ -3777,203 +3760,201 @@ journalctl -u elasticsearch.service
          port: 9200
        match: kube_events
      ```
-   
-   - Output配置文件修改完成后，查看fluent-bit的容器log，看看是否正常输出日志到es了，在日志输出里可以发现，修改配置文件之前，还是有大量的报错，修改配置文件后fluent-bit监测到配置文件发生变化，自动重启了服务，启动后，没有报错，说明日志可以正常输出es。
-   
+
+   - Output 配置文件修改完成后，查看 fluent-bit 的容器 log，看看是否正常输出日志到 es 了，在日志输出里可以发现，修改配置文件之前，还是有大量的报错，修改配置文件后 fluent-bit 监测到配置文件发生变化，自动重启了服务，启动后，没有报错，说明日志可以正常输出 es。
+
    - ```shell
      [root@ks-k8s-master-0 ~]# kubectl logs  fluent-bit-xq2jb -n kubesphere-logging-system
-     
+  
      [2022/04/28 02:58:19] [ warn] [engine] failed to flush chunk '39-1651114694.735704833.flb', retry in 9 seconds: task_id=4, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/28 02:58:19] [ warn] [engine] failed to flush chunk '39-1651114695.509379382.flb', retry in 10 seconds: task_id=5, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/28 02:58:20] [ warn] [engine] chunk '39-1651114693.743740772.flb' cannot be retried: task_id=2, input=tail.2 > output=es.0
-     
+  
       level=info msg="Config file changed, stopping Fluent Bit"
-     
+  
       level=info msg="Killed Fluent Bit"
-     
+  
       level=info msg="Config file changed, stopped Fluent Bit"
-     
+  
       level=info msg="Config file changed, stopping Fluent Bit"
-     
+  
       level=info msg="Killed Fluent Bit"
-     
+  
       level=info msg="Config file changed, stopped Fluent Bit"
-     
+  
       [2022/04/28 02:58:20] [engine] caught signal (SIGTERM)
-     
+  
       [2022/04/28 02:58:20] [ info] [input] pausing systemd.0
-     
+  
       [2022/04/28 02:58:20] [ info] [input] pausing systemd.1
-     
+  
       [2022/04/28 02:58:20] [ info] [input] pausing tail.2
-     
+  
       [2022/04/28 02:58:20] [ info] [input] pausing tail.3
-     
+  
       [2022/04/28 02:58:20] [ info] [input] pausing tail.4
-     
+  
       [2022/04/28 02:58:20] [ warn] [engine] service will stop in 5 seconds
-     
+  
       [2022/04/28 02:58:20] [ warn] [engine] failed to flush chunk '39-1651114699.328367642.flb', retry in 6 seconds: task_id=0, input=tail.2 > output=es.0 (out_id=0)
-     
+  
       [2022/04/28 02:58:23] [ warn] [engine] chunk '39-1651114689.327129623.flb' cannot be retried: task_id=1, input=tail.2 > output=es.0
-     
+  
       [2022/04/28 02:58:25] [ info] [engine] service stopped
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=416649 watch_fd=1
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=461549 watch_fd=2
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134582558 watch_fd=3
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134581715 watch_fd=4
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268955529 watch_fd=5
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373423 watch_fd=6
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373208 watch_fd=7
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403716654 watch_fd=8
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134583208 watch_fd=9
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=997310 watch_fd=10
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=269010417 watch_fd=11
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=984532 watch_fd=12
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403995814 watch_fd=13
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=962171 watch_fd=14
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134583424 watch_fd=15
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134580575 watch_fd=16
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268955289 watch_fd=17
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403715964 watch_fd=18
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403855647 watch_fd=19
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=413299 watch_fd=20
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=375870 watch_fd=21
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134581094 watch_fd=22
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=463110 watch_fd=23
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=135190584 watch_fd=24
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134738131 watch_fd=25
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=268956011 watch_fd=26
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=373969 watch_fd=27
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403792092 watch_fd=28
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=412431 watch_fd=29
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=134738124 watch_fd=30
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=467559 watch_fd=31
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=403860482 watch_fd=32
-     
+  
       [2022/04/28 02:58:25] [ info] [input:tail:tail.2] inotify_fs_remove(): inode=997586 watch_fd=33
-     
+  
       level=error msg="Fluent bit exited" error=null
-     
+  
       level=info msg=backoff delay=1s
-     
+  
       level=info msg="backoff timer done" actual=1.000167488s expected=1s
-     
+  
       level=info msg="Fluent bit started"
-     
+  
       Fluent Bit v1.8.3
-     
+  
       * Copyright (C) 2019-2021 The Fluent Bit Authors
-     
+  
       * Copyright (C) 2015-2018 Treasure Data
-     
+  
       * Fluent Bit is a CNCF sub-project under the umbrella of Fluentd
-     
+  
       * https://fluentbit.io
-     
-      
-     
+  
       [2022/04/28 02:58:26] [ info] [engine] started (pid=42)
-     
+  
       [2022/04/28 02:58:26] [ info] [storage] version=1.1.1, initializing...
-     
+  
       [2022/04/28 02:58:26] [ info] [storage] in-memory
-     
+  
       [2022/04/28 02:58:26] [ info] [storage] normal synchronization mode, checksum disabled, max_chunks_up=128
-     
+  
       [2022/04/28 02:58:26] [ info] [cmetrics] version=0.1.6
-     
+  
       [2022/04/28 02:58:26] [ info] [input:systemd:systemd.0] seek_cursor=s=5d0022eeaf454ba8a40dde2836de2f4d;i=e3f... OK
-     
+  
       [2022/04/28 02:58:26] [ info] [input:systemd:systemd.1] seek_cursor=s=5d0022eeaf454ba8a40dde2836de2f4d;i=e47... OK
-     
+  
       [2022/04/28 02:58:26] [ info] [filter:kubernetes:kubernetes.4] https=1 host=kubernetes.default.svc port=443
-     
+  
       [2022/04/28 02:58:26] [ info] [filter:kubernetes:kubernetes.4] local POD info OK
-     
+  
       [2022/04/28 02:58:26] [ info] [filter:kubernetes:kubernetes.4] testing connectivity with API server...
-     
+  
       [2022/04/28 02:58:26] [ info] [filter:kubernetes:kubernetes.4] connectivity OK
-     
+  
       [2022/04/28 02:58:26] [ info] [sp] stream processor started
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=416649 watch_fd=1 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_alertmanager-1a71f1d5b1136320644f3289e4b22544620db4a0d35a1ffec52bc534d729c358.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=461549 watch_fd=2 name=/var/log/containers/alertmanager-main-2_kubesphere-monitoring-system_config-reloader-bc14c53008f1e800d6240a5b912239a3d5682c6dcb719f48c69b7e8ba5892e35.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134582558 watch_fd=3 name=/var/log/containers/calico-kube-controllers-75ddb95444-8xvf4_kube-system_calico-kube-controllers-dc90044aa0ce62e61dfb0842c8f2e5aa8d021738adffca847b003a5c9621512c.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134581715 watch_fd=4 name=/var/log/containers/calico-node-pzvrj_kube-system_calico-node-f2f40fb9878e3328a4783ceb9c01eaed9edf24c85579ed87c7ffc2161779c3e2.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=268955529 watch_fd=5 name=/var/log/containers/calico-node-pzvrj_kube-system_flexvol-driver-abf59d8a7af22c683dfb0776a0835c719f41ef23446e912f82901a4fd9cf166f.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373423 watch_fd=6 name=/var/log/containers/calico-node-pzvrj_kube-system_install-cni-b3d49f2e9c03e63c3863d50365d2ade01dead979c90285c526ac0029b58411cd.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=373208 watch_fd=7 name=/var/log/containers/calico-node-pzvrj_kube-system_upgrade-ipam-6d4425d7ea5302511df1c278f2b113ac8fdfa0a372e07b025e0a9b45d30129ac.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403716654 watch_fd=8 name=/var/log/containers/coredns-5495dd7c88-68k9b_kube-system_coredns-879c087a4c8717d0886e6603a63e9503a406d215cfe77941cbcc1cc7c138d010.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583208 watch_fd=9 name=/var/log/containers/coredns-5495dd7c88-z9q6j_kube-system_coredns-80cd4427410de02465b415683817a75674a95777ffc0929f93e87506b120ca59.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=997310 watch_fd=10 name=/var/log/containers/ks-apiserver-6554c5ddb4-tzvmf_kubesphere-system_ks-apiserver-9536d87a3fa484f71c1a22a8eb489ce67e5a072a4d3f2d38796220f192a32b4f.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=269010417 watch_fd=11 name=/var/log/containers/ks-console-65f4d44d88-hzw9b_kubesphere-system_ks-console-f600455c3af064c53adc8eb7e5412505c4d0e50362ab11b8e59d2e71b552b0f1.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=984532 watch_fd=12 name=/var/log/containers/ks-controller-manager-b575b54ff-8tx8m_kubesphere-system_ks-controller-manager-d11c9db1fc376410555fc4ac7de2fa46bb2aa963c2bcbd407fab46d017caf788.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=403995814 watch_fd=13 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_config-reloader-2d51bab0babdd47864ec235efdbd69d2075cc8bf72c3642449be69f68aa1f0d5.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=962171 watch_fd=14 name=/var/log/containers/ks-events-ruler-575669b4-mh2fn_kubesphere-logging-system_events-ruler-da24092a12c4fc0d0aab8a02c7fc7cb1e0e82d15a924717222bdbadee7935c84.log
-     
+  
       [2022/04/28 02:58:26] [ info] [input:tail:tail.2] inotify_fs_add(): inode=134583424 watch_fd=15 name=/var/log/containers/kube-apiserver-ks-k8s-master-0_kube-system_kube-apiserver-b4e97a525442956fe7612d27367a184ee09d65a56464149ec913ea004db0f1ef.log
      ```
-   
-   - 再看看es里是否有索引了。
-   
+
+   - 再看看 es 里是否有索引了。
+
    - ```shell
      [root@glusterfs-node-0 ~]# curl -ulstack:'P@88w0rd' 192.168.9.95:9200/_cat/indices?v
      health status index                      uuid                   pri rep docs.count docs.deleted store.size pri.store.size
      green  open   .geoip_databases           VFDw1lkoQYiWeX-u7bMC1Q   1   1         40            0     75.5mb         37.7mb
      green  open   ks-logstash-log-2022.04.28 eu6citkMQ4aHpsHnLhj7IQ   1   1        407            0    394.6kb        164.4kb
      ```
-   
-   - 注意啊，此时工具箱里的分析工具还是会报错的。按着上面的操作方法，重启一下ks-apiserver就可以解决并看到相应的结果。
-   
-8. 至此，ElasticSearch采用http协议不开启认证和开启认证两种方式的对接全部实现了，本文其实没有介绍ElasticSearch采用HTTPS协议的方式，后续如果真有需求再补充。
+
+   - 注意啊，此时工具箱里的分析工具还是会报错的。按着上面的操作方法，重启一下 ks-apiserver 就可以解决并看到相应的结果。
+
+8. 至此，ElasticSearch 采用 http 协议不开启认证和开启认证两种方式的对接全部实现了，本文其实没有介绍 ElasticSearch 采用 HTTPS 协议的方式，后续如果真有需求再补充。
 
 ## 5. 技术关键点梳理
 
@@ -3982,32 +3963,34 @@ journalctl -u elasticsearch.service
 1. fluentbit-operator
    - Input
    - Output
-2. ClusterConfiguration的技术细节
-3. ks-installer的技术细节
-4. ElasticSearch的优化配置 
+2. ClusterConfiguration 的技术细节
+3. ks-installer 的技术细节
+4. ElasticSearch 的优化配置 
 
 ## 6. 总结
 
-本文详细讲解了ElasticSearch基于http协议启用认证和不启用认证两种方式的集群安装部署过程，同时在KubeSphere中开启了可插拔的日志组件，并演示了与两种模式下的ElasticSearch集群对接以及对接过程中的遇坑、填坑的过程。本文的配置经验可直接用于生产环境。到此为止，我们KubeSphere和Kubernetes的安装配置和初始化已经全部完成，下一章开始，我们将开启利用KubeSphere在Kubernetes上安装配置各种常用服务的实践之旅。
-
+本文详细讲解了 ElasticSearch 基于 http 协议启用认证和不启用认证两种方式的集群安装部署过程，同时在 KubeSphere 中开启了可插拔的日志组件，并演示了与两种模式下的 ElasticSearch 集群对接以及对接过程中的遇坑、填坑的过程。本文的配置经验可直接用于生产环境。到此为止，我们 KubeSphere 和 Kubernetes 的安装配置和初始化已经全部完成，下一章开始，我们将开启利用 KubeSphere 在 Kubernetes 上安装配置各种常用服务的实践之旅。
 
 > **参考文档**
 
 - 太多了，大部分都在文中直接链接了
-- [fluent-operator官网](https://github.com/fluent/fluent-operator/tree/master/charts/fluent-operator/crds)
+- [fluent-operator 官网](https://github.com/fluent/fluent-operator/tree/master/charts/fluent-operator/crds)
 - https://ptran32.github.io/2020-08-12-send-k8s-logs-with-fluentbit/
 - https://banzaicloud.com/docs/one-eye/logging-operator/operation/troubleshooting/fluentbit/
 
+> **Get 文档**
 
-> **Get文档**
-
-- Github https://github.com/devops/z-notes**
+- Github https://github.com/devops/z-notes
 - Gitee https://gitee.com/zdevops/z-notes
 
-> **Get代码**
+> **Get 代码**
 
 - Github https://github.com/devops/ansible-zdevops
 - Gitee https://gitee.com/zdevops/ansible-zdevops
+
+> **B 站**
+
+- [老 Z 手记](https://space.bilibili.com/1039301316) https://space.bilibili.com/1039301316
 
 > **版权声明** 
 
@@ -4015,8 +3998,9 @@ journalctl -u elasticsearch.service
 
 > About Me
 
-- 昵称：老Z
+- 昵称：老 Z
 - 坐标：山东济南
-- 职业：运维架构师/高级运维工程师=**运维**
-- 关注的领域：云计算/云原生技术运维，自动化运维
+- 职业：运维架构师 / 高级运维工程师 =**运维**
+- 微信：zdevops
+- 关注的领域：云计算 / 云原生技术运维，自动化运维
 - 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
