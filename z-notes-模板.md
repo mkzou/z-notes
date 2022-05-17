@@ -18,11 +18,17 @@
 >
 > - **CNCF技术栈**
 
-
-
 ## 1. 本文简介
 
 Xxx
+
+> 本文知识量
+
+- 阅读时长：x分
+- 行：x
+- 单词：x
+- 字符：x
+- 图片：x张
 
 > **本文知识点**
 
@@ -41,21 +47,15 @@ Xxx
 | glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
 | glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
 
-
 ## 2. Ansible配置
 
 ## 3. 主题正文
 
 ## 4. 常见问题
 
-
 ## 5. 总结
 
-
 > **参考文档**
-
-
-
 
 > **Get文档**
 
@@ -67,14 +67,19 @@ Xxx
 - Github https://github.com/devops/ansible-zdevops
 - Gitee https://gitee.com/zdevops/ansible-zdevops
 
+> **B 站**
+
+- [老 Z 手记](https://space.bilibili.com/1039301316) https://space.bilibili.com/1039301316
+
 > **版权声明** 
 
 - 所有内容均属于原创，整理不易，感谢收藏，转载请标明出处。
 
-> About Me
+> **About Me**
 
 - 昵称：老Z
 - 坐标：山东济南
 - 职业：运维架构师/高级运维工程师=**运维**
+- 微信：zdevops
 - 关注的领域：云计算/云原生技术运维，自动化运维
 - 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
