@@ -1,12 +1,12 @@
-# 基于KubeSphere玩转k8s-KubeSphere安装手记
+# 基于 KubeSphere 玩转 k8s-KubeSphere 安装手记
 
-**大家好，我是老Z！**
+**大家好，我是老 Z！**
 
 > 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
 >
 > 如果你喜欢本文，请分享给你的小伙伴！
 
-**本系列文档内容涵盖(但不限于)以下技术领域：**
+**本系列文档内容涵盖 (但不限于) 以下技术领域：**
 
 > - **KubeSphere**
 >
@@ -16,29 +16,33 @@
 >
 > - **自动化运维**
 >
-> - **CNCF技术栈**
-
-
+> - **CNCF 技术栈**
 
 ## 1. 本文简介
 
- 本文是基于KubeSphere玩转k8s的开篇之作，主要记录了KubeSphere的安装配置过程。
+ 本文是基于 KubeSphere 玩转 k8s 的开篇之作，主要记录了 KubeSphere 的安装配置过程。
+
+> **本文知识量**
+
+- 阅读时长：26 分
+- 行：1895
+- 单词：10056
+- 字符：93833
+- 图片：0 张
 
 > **本文知识点**
 
 - 定级：**入门级**
 
-- 使用Ansible进行k8s服务器初始化配置
+- 使用 Ansible 进行 k8s 服务器初始化配置
 
-- 使用KubeKey部署KubeSphere和Kubernetes
-
-  
+- 使用 KubeKey 部署 KubeSphere 和 Kubernetes
 
 > **演示服务器配置**
 
 |      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
 | :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
-|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
+|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible 运维控制节点        |
 | ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
@@ -46,22 +50,18 @@
 | glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
 | glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
 
+---
 
+## 2. Ansible 配置
 
-## 2. Ansible配置
-
-
-
-> **01-切换到ansible代码目录**
+### 2.1.切换到 ansible 代码目录
 
   ```shell
 [root@zdevops-master dev]# cd /data/ansible/ansible-zdevops/inventories/dev
 [root@zdevops-master dev]# source /opt/ansible2.8/bin/activate
   ```
 
-
-
-> **02-初始hosts配置**
+### 2.2. 初始 hosts 配置
 
 ```yaml
 [k8s]
@@ -78,11 +78,11 @@ ansible_ssh_user=root
 ansible_ssh_pass=password
 ```
 
-
+---
 
 ## 3. 服务器初始化
 
-> **01-检测服务器连通性**
+### 3.1. 检测服务器连通性
 
 ```shell
 # 利用ansible检测服务器的连通性
@@ -104,9 +104,7 @@ ks-k8s-master-1 | SUCCESS => {
 }
 ```
 
-
-
-> **02-初始化服务器配置**
+### 3.2. 初始化服务器配置
 
 ```shell
 # 利用ansible-playbook初始化服务器配置
@@ -309,11 +307,9 @@ Sun Apr  3 15:45:21 CST 2022
 
 ```
 
+### 3.3. 挂载数据盘
 
-
-> **03-挂载数据盘**
-
-**因为Kubekey安装的容器运行时，数据目录默认会在/var/lib/docker,且目前无法自定义更改，因此提前规划将该目录挂载独立的数据盘**
+**因为 Kubekey 安装的容器运行时，数据目录默认会在 /var/lib/docker, 且目前无法自定义更改，因此提前规划将该目录挂载独立的数据盘。**
 
 ```shell
 # 利用ansible-playbook初始化主机数据盘
@@ -346,9 +342,7 @@ ks-k8s-master-2            : ok=3    changed=3    unreachable=0    failed=0    s
 
 ```
 
-
-
-> **04-验证数据盘的挂载**
+### 3.4. 验证数据盘的挂载
 
 ```shell
 # 利用ansible验证数据盘是否格式化并挂载
@@ -406,11 +400,11 @@ ks-k8s-master-0 | CHANGED | rc=0 >>
 
 ```
 
+---
 
+## 4. Kubernetes 基础依赖包安装
 
-## 4. Kubernetes基础依赖包安装
-
-> **01-安装基础依赖包**
+### 4.1. 安装基础依赖包
 
 ```shell
 # 利用ansible-playbook安装kubernetes基础依赖包
@@ -469,14 +463,14 @@ libglusterfs0-9.5-1.el7.x86_64
 
 ```
 
+---
 
+## 5. 使用 KubeKey 部署 KubeSphere 和 Kubernetes
 
-## 5. 使用KubeKey部署KubeSphere和Kubernetes
-
-> **01-下载KubeKey**
+### 5.1. 下载 KubeKey
 
 ```shell
-# 登陆ks-k8s-master-0节点
+# 登录ks-k8s-master-0节点
 [root@zdevops-master dev]# ssh root@ks-k8s-master-0
 
 # 选择中文区下载(访问github受限时使用)
@@ -500,9 +494,7 @@ kk  kubekey-v2.0.0-linux-amd64.tar.gz
 [root@ks-master-0 kubekey]# chmod +x kk
 ```
 
-
-
-> **02-部署KubeSphere和Kubernetes**
+### 5.2. 部署 KubeSphere 和 Kubernetes
 
 ```yaml
 # 查看当前版本的KubeSphere支持的Kubernetes版本，从列表中选择一个需要的版本，不在列表中的版本不受支持
@@ -545,9 +537,7 @@ total 68480
 -rw-r--r-- 1 root root 16348932 Apr  3 12:57 kubekey-v2.0.0-linux-amd64.tar.gz
 ```
 
-
-
-> **03-编辑配置文件**
+### 5.3. 编辑配置文件
 
 ```yaml
 # vi config-sample.yaml
@@ -777,14 +767,12 @@ spec:
 ```
 
 - **spec.hosts:** 填写节点信息
--  **spec.roleGroups.etcd:** 填写etc节点的**hosts.name**字段的值
--  **spec.roleGroups.control-plane:** 填写k8s master节点的**hosts.name字段的值
--  **spec.roleGroups.worker:** 填写worker节点的**hosts.name字段的值
--  **spec.controlPlaneEndpoint.internalLoadbalancer:** 取消注释
+- **spec.roleGroups.etcd:** 填写 etc 节点的 **hosts.name** 字段的值
+- **spec.roleGroups.control-plane:** 填写 k8s master 节点的 **hosts.name 字段的值
+- **spec.roleGroups.worker:** 填写 worker 节点的 **hosts.name 字段的值
+- **spec.controlPlaneEndpoint.internalLoadbalancer:** 取消注释
 
-
-
-> **04-开始安装KubeSphere和kubernetes**
+### 5.4. 开始安装 KubeSphere 和 kubernetes
 
 ```shell
 # 利用kk开始安装
@@ -1594,9 +1582,9 @@ Please check the result using the command:
 
 - **安装开始时间：13:01:41**
 - **安装完成时间： 13:27:51**
-- **安装总用时: 26:10** 
+- **安装总用时 : 26:10** 
 
-> **05-验证安装**
+### 5.5. 验证安装
 
 ```yaml
 # 运行以下命令查看安装日志
@@ -1649,9 +1637,7 @@ https://kubesphere.io             2022-04-03 13:27:48
 
 ```
 
-
-
-> **06-查看k8s节点信息**
+### 5.6. 查看 k8s 节点信息
 
 ```shell
 [root@ks-k8s-master-0 kubekey]# kubectl get nodes -o wide
@@ -1661,9 +1647,7 @@ ks-k8s-master-1   Ready    control-plane,master,worker   90m   v1.21.5   192.168
 ks-k8s-master-2   Ready    control-plane,master,worker   90m   v1.21.5   192.168.9.93   <none>        CentOS Linux 7 (Core)   3.10.0-1160.59.1.el7.x86_64   docker://20.10.8
 ```
 
-
-
-> **07-配置bash自动补全功能**
+### 5.7. 配置 bash 自动补全功能
 
 ```shell
 [root@ks-k8s-master-0 zdevops]# yum install bash-completion
@@ -1708,14 +1692,14 @@ Installed:
 Complete!
 
 
-# kubectl 补全脚本导入（sourced）到 shell 会话中，两种方法二选一
+# kubectl 补全脚本导入（source）到 shell 会话中，两种方法二选一
 # 方法一：当前用户
 [root@ks-k8s-master-0 ~]# echo 'source <(kubectl completion bash)' >> ~/.bashrc
 
 # 方法二：系统全局
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 
-# 本文选则第一种，使sourced生效
+# 本文选择第一种，使source生效
 [root@ks-k8s-master-0 ~]# source ~/.bashrc 
 [root@ks-k8s-master-0 ~]# kubectl get n
 namespacenetworkpolicies.network.kubesphere.io   networksets.crd.projectcalico.org
@@ -1724,11 +1708,11 @@ networkpolicies.crd.projectcalico.org            nodes
 networkpolicies.networking.k8s.io                notificationmanagers.notification.kubesphere.io
 ```
 
-
+---
 
 ## 6. 深入探究
 
-> **01-docker的安装方式及位置**
+### 6.1. docker 的安装方式及位置
 
 ```yaml
 # 二进制的方式安装
@@ -1741,7 +1725,7 @@ networkpolicies.networking.k8s.io                notificationmanagers.notificati
 -rwxr-xr-x 1 1000 1000  2784649 Jul 31  2021 /usr/bin/docker-proxy
 ```
 
-> **02-kubenetes如何安装的？装了什么组件？**
+### 6.2. kubenetes 如何安装的？装了什么组件？
 
 ```yaml
 # 二进制的方式安装
@@ -1765,9 +1749,7 @@ total 16
 -rwxr-xr-x 1 root root 1120 Apr  1 22:44 k8s-certs-renew.sh
 ```
 
-
-
-> **03-Kubekey在/etc/hosts文件中写了啥?**
+### 6.3. Kubekey 在 /etc/hosts 文件中写了啥?
 
 ```shell
 [root@ks-k8s-master-0 kubekey]# cat /etc/hosts
@@ -1786,9 +1768,7 @@ total 16
 # kubekey hosts END
 ```
 
-
-
-> **04-KubeSphere服务相关的容器有哪些？**
+### 6.4. KubeSphere 服务相关的容器有哪些？
 
 ```shell
 [root@ks-k8s-master-0 kubekey]# docker ps -a  | grep kube
@@ -1847,11 +1827,11 @@ ff5a86654de9   8e60ea3644d6                                                "kube
 6
 ```
 
-
+---
 
 ## 7. 常见问题
 
-> **问题1**
+> **问题 1**
 
 ```yaml
 # 报错信息
@@ -1862,7 +1842,7 @@ You cannot set up the internal load balancer and the LB address at the same time
 address: "192.168.9.90" 参数改为 address: ""
 ```
 
-> **问题2**
+> **问题 2**
 
 ```shell
 #  报错信息
@@ -1876,28 +1856,29 @@ failed: [LocalHost] [DownloadBinaries] exec failed after 1 retires: Failed to do
 目前3.2.1的版本不支持k8s v1.22.8，利用kk version --show-supported-k8s查看支持的版本，更换支持的版本，重新执行安装命令。
 ```
 
-
+---
 
 ## 8. 总结
 
-以上内容详细记录了KubeSphere安装K8S的全过程。
-
-
+以上内容详细记录了 KubeSphere 安装 K8S 的全过程。
 
 > **参考文档**
 
 - [使用 KubeKey 内置 HAproxy 创建高可用集群]: https://kubesphere.com.cn/docs/installing-on-linux/high-availability-configurations/internal-ha-configuration/
 
-
-> **Get文档**
+> **Get 文档**
 
 - Github https://github.com/devops/z-notes
 - Gitee https://gitee.com/zdevops/z-notes
 
-> **Get代码**
+> **Get 代码**
 
 - Github https://github.com/devops/ansible-zdevops
 - Gitee https://gitee.com/zdevops/ansible-zdevops
+
+> **B 站**
+
+- [老 Z 手记](https://space.bilibili.com/1039301316) https://space.bilibili.com/1039301316
 
 > **版权声明** 
 
@@ -1905,8 +1886,9 @@ failed: [LocalHost] [DownloadBinaries] exec failed after 1 retires: Failed to do
 
 > About Me
 
-- 昵称：老Z
+- 昵称：老 Z
 - 坐标：山东济南
-- 职业：运维架构师/高级运维工程师=**运维**
-- 关注的领域：云计算/云原生技术运维，自动化运维
+- 职业：运维架构师 / 高级运维工程师 =**运维**
+- 微信：zdevops
+- 关注的领域：云计算 / 云原生技术运维，自动化运维
 - 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
