@@ -306,21 +306,21 @@
 先用 telnet 命令测试一下，MySQL 服务的连通性，能看到下面的结果就说明 MySQL 已经可以在 K8S 集群外部访问了。
 
 ```shell
-     [root@ks-k8s-master-0 ~]# telnet 192.168.9.91 32529
-     Trying 192.168.9.91...
-     Connected to 192.168.9.91.
-     Escape character is '^]'.
-     EHost '10.233.117.0' is not allowed to connect to this MySQL serverConnection closed by foreign host.
-     
-     # 细节！上面的EHost地址是192.168.9.91这个节点在K8S集群内部分配的IP
-     [root@ks-k8s-master-0 ~]# ip add | grep 117 -B 2 -A 1
-     7: tunl0@NONE: <NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN group default qlen 1000
-         link/ipip 0.0.0.0 brd 0.0.0.0
-         inet 10.233.117.0/32 scope global tunl0
-            valid_lft forever preferred_lft forever
-     [root@ks-k8s-master-0 ~]# ip add | grep 91
-         inet 192.168.9.91/24 brd 192.168.9.255 scope global noprefixroute ens160
-         link/ether c6:d3:91:95:f1:0f brd ff:ff:ff:ff:ff:ff
+[root@ks-k8s-master-0 ~]# telnet 192.168.9.91 32529
+Trying 192.168.9.91...
+Connected to 192.168.9.91.
+Escape character is '^]'.
+EHost '10.233.117.0' is not allowed to connect to this MySQL serverConnection closed by foreign host.
+
+# 细节！上面的EHost地址是192.168.9.91这个节点在K8S集群内部分配的IP
+[root@ks-k8s-master-0 ~]# ip add | grep 117 -B 2 -A 1
+7: tunl0@NONE: <NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0
+    inet 10.233.117.0/32 scope global tunl0
+       valid_lft forever preferred_lft forever
+[root@ks-k8s-master-0 ~]# ip add | grep 91
+    inet 192.168.9.91/24 brd 192.168.9.255 scope global noprefixroute ens160
+    link/ether c6:d3:91:95:f1:0f brd ff:ff:ff:ff:ff:ff
 ```
 
 > **02-自定义 MySQL 配置文件**
@@ -331,7 +331,7 @@
 
 使用自定义配置前，我们先需要了解目前 mysql 容器的配置文件结构。
 
-使用 KubeSphere 提供的**终端**工具，进入 mysql 容器内部，执行下面的命令，分析执行结果（终端登录方式参考前文截图）。
+使用 KubeSphere 提供的**终端**工具，进入 mysql 容器内部，执行下面的命令，分析执行结果(终端登录方式参考前文截图)。
 
 ```shell
 # bash
@@ -1625,7 +1625,7 @@ Branch 'main' set up to track remote branch 'main' from 'origin'.
 
 - MySQL 上线运行后，由于业务量上涨，初始配置参数中的 **max_connections** 太小了，需要增大。
 
-- 配置参数调整完成后，更新线上配置，并重启服务 (生产环境数据库不要轻易重启，这种需求可以用临时修改解决)。
+- 配置参数调整完成后，更新线上配置，并重启服务(生产环境数据库不要轻易重启，这种需求可以用临时修改解决)。
 
 - 这里只是模拟一个简单的例子，带大家体验 GitOps，实际使用中所有的配置文件都建议使用 Git 进行版本控制。
 
@@ -1971,7 +1971,7 @@ Generating yum cache for akopytov_sysbench-source...
 The repository is setup! You can now install packages.
 
 # 安装sysbench
-[root@ks-k8s-master-0 ~]# yum install sysbench
+[root@ks-k8s-master-0 ~]# yum install sysbench -y
 Loaded plugins: fastestmirror
 Loading mirror speeds from cached hostfile
  * base: mirrors.aliyun.com
@@ -2006,7 +2006,6 @@ Install  1 Package (+1 Dependent package)
 
 Total download size: 665 k
 Installed size: 1.8 M
-Is this ok [y/d/N]: y
 Downloading packages:
 (1/2): postgresql-libs-9.2.24-7.el7_9.x86_64.rpm                                                                    | 235 kB  00:00:00     
 (2/2): sysbench-1.0.20-1.el7.x86_64.rpm                                                                             | 430 kB  00:00:03     
@@ -2087,8 +2086,6 @@ Query OK, 1 row affected (0.02 sec)
 
 mysql> grant all privileges on *.* to 'root'@'%' identified by 'P@88w0rd' with grant option;
 Query OK, 0 rows affected, 1 warning (0.02 sec)
-
-
 ```
 
 - 测试数据库是否能连接
@@ -2096,7 +2093,7 @@ Query OK, 0 rows affected, 1 warning (0.02 sec)
 ```shell
 # 安装mysql客户端，下面的示例是在k8s节点上安装的，由于系统是最小化安装，所有会安装很多依赖。实际测试可以起一个mysql的pod或是用其他的mysql客户端工具。
 
-[root@ks-k8s-master-0 ~]# yum install mysql
+[root@ks-k8s-master-0 ~]# yum install mysql -y
 Loaded plugins: fastestmirror
 Loading mirror speeds from cached hostfile
  * base: mirrors.aliyun.com
@@ -2223,7 +2220,6 @@ Install  1 Package (+27 Dependent packages)
 
 Total download size: 20 M
 Installed size: 85 M
-Is this ok [y/d/N]: y
 Downloading packages:
 (1/28): perl-Carp-1.26-244.el7.noarch.rpm                                                                           |  19 kB  00:00:00     
 (2/28): perl-Encode-2.51-7.el7.x86_64.rpm                                                                           | 1.5 MB  00:00:00     
@@ -2506,7 +2502,6 @@ Latency (ms):
 Threads fairness:
     events (avg/stddev):           495.3125/4.03
     execution time (avg/stddev):   100.2705/0.03
-
 ```
 
 - 执行测试-32 线程测试
@@ -2607,7 +2602,7 @@ Dropping table 'sbtest16'...
 
 本文详细介绍了 KubeSphere 图形化部署单节点 MySQL 上的安装配置过程，如何利用 KubeSphere 的图形化功能创建资源配置清单 YAML 文件的思路和具体操作过程，以后再部署其他在官网找不到详细配置指南的服务都可以借鉴这个方法。
 
-本文还详细介绍了 Git 常用操作、如果将代码在多个在线代码仓库中存储并保持同步，还介绍了 GitOps 的基本概念并演示了如何用 GitOps 理念在原生 K8S 上部署 MySQL 服务。
+本文还详细介绍了 Git 常用操作、如何将代码在多个在线代码仓库中存储并保持同步，还介绍了 GitOps 的基本概念并演示了如何用 GitOps 理念在原生 K8S 上部署 MySQL 服务。
 
 最后，演示了 MySQL 常用性能测试工具 sysbench 的安装和基础使用。
 
