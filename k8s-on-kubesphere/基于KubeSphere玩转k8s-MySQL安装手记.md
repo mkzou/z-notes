@@ -1619,9 +1619,9 @@ Branch 'main' set up to track remote branch 'main' from 'origin'.
 
 ![kubesphere-projects-lstack-statefulsets-mysql-73](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-projects-lstack-statefulsets-mysql-73.png)
 
-7. 再次体验 GitOps
+### 3.7.再次体验 GitOps
 
-模拟一个业务场景，再次体验一下 GitOps。
+**模拟一个业务场景，再次体验一下 GitOps。**
 
 - MySQL 上线运行后，由于业务量上涨，初始配置参数中的 **max_connections** 太小了，需要增大。
 
