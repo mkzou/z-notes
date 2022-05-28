@@ -20,7 +20,15 @@
 
 ## 1. 本文简介
 
-本文接着上篇 **<<基于KubeSphere玩转k8s-KubeSphere安装手记>>** ，继续玩转KubeSphere，k8s，本期会讲解分布式存储GluterFS的安装部署以及与KubeSphere安装的k8s集群的对接。
+本文接着上篇 **<<基于KubeSphere玩转k8s-KubeSphere初始化手记>>** ，继续玩转KubeSphere、k8s，本期会讲解分布式存储GluterFS的安装部署以及与KubeSphere安装的k8s集群的对接配置。
+
+> **本文知识量**
+
+- 阅读时长：26 分
+- 行：1895
+- 单词：10056
+- 字符：93833
+- 图片：0 张
 
 > **本文知识点**
 
@@ -32,19 +40,28 @@
 
 > **演示服务器配置**
 
-| 主机名              | IP           | CPU | 内存  | 系统盘 | 数据盘 | 用途                               |
-|:----------------:|:------------:|:---:|:---:|:---:|:---:|:--------------------------------:|
-| zdevops-master   | 192.168.9.9  | 2   | 4   | 40  | 200 | Ansible运维控制节点                    |
-| ks-k8s-master-0  | 192.168.9.91 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-1  | 192.168.9.92 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-2  | 192.168.9.93 | 8   | 32  | 40  | 200 | KubeSphere/k8s-master/k8s-worker |
-| glusterfs-node-0 | 192.168.9.95 | 4   | 8   | 40  | 200 | GlusterFS                        |
-| glusterfs-node-1 | 192.168.9.96 | 4   | 8   | 40  | 200 | GlusterFS                        |
-| glusterfs-node-2 | 192.168.9.97 | 4   | 8   | 40  | 200 | GlusterFS                        |
+|      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
+| :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
+|  zdevops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
+| ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
+| ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
+| ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
+| glusterfs-node-0 | 192.168.9.95 |  4   |  8   |   40   |  200   |            GlusterFS             |
+| glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
+| glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
+
+> **演示环境涉及软件版本信息**
+
+- 操作系统：**CentOS-7.9-x86_64**
+- KubeSphere：**3.2.1**
+- GlusterFS：**9.5-1**
+- Ansible：**2.8.20**
+
+---
 
 ## 2. Ansible配置
 
-> **01-增加hosts配置**
+### 2.1. 增加hosts配置
 
 ```yaml
 # hosts文件配置
@@ -70,12 +87,14 @@ ansible_ssh_user=root
 ansible_ssh_pass=password
 ```
 
+---
+
 ## 3. GlusterFS安装配置
 
-> **01-检测服务器连通性**
+### 3.1. 检测服务器连通性
 
 ```shell
-# 利用ansible检测服务器的连通性
+# 利用 ansible 检测服务器的连通性
 
 (ansible2.8) [root@zdevops-master dev]# ansible glusterfs -m ping
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
@@ -94,41 +113,109 @@ glusterfs-node-0 | SUCCESS => {
 }
 ```
 
-> **02-初始化服务器配置**
+### 3.2. 初始化服务器配置
 
 ```shell
-# 利用ansible-playbook初始化服务器配置
+# 利用 ansible-playbook 初始化服务器配置
 
 (ansible2.8) [root@zdevops-master dev]# ansible-playbook ../../playbooks/init-base.yaml -l glusterfs
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
   from cryptography.exceptions import InvalidSignature
 
-PLAY [初始化服务器.] ********************************************************************************************************************************************
+PLAY [初始化服务器配置.] *************************************************************************************************
 
-TASK [01-停止并禁用firewalld服务.] *******************************************************************************************************************************
+TASK [01-停止并禁用firewalld服务.] **************************************************************************************
 changed: [glusterfs-node-2]
 changed: [glusterfs-node-0]
 changed: [glusterfs-node-1]
 
-TASK [02-配置主机名.] ******************************************************************************************************************************************
-changed: [glusterfs-node-1]
+TASK [02-配置主机名.] *************************************************************************************************
 changed: [glusterfs-node-2]
+changed: [glusterfs-node-1]
 changed: [glusterfs-node-0]
 
-TASK [03-配置时区.] *******************************************************************************************************************************************
+TASK [03-配置/etc/hosts.] ******************************************************************************************
+changed: [glusterfs-node-0]
+changed: [glusterfs-node-1]
+changed: [glusterfs-node-2]
+
+TASK [04-配置时区.] **************************************************************************************************
+ok: [glusterfs-node-1]
 ok: [glusterfs-node-2]
 ok: [glusterfs-node-0]
-ok: [glusterfs-node-1]
 
-PLAY RECAP ************************************************************************************************************************************************
-glusterfs-node-0           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-glusterfs-node-1           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
-glusterfs-node-2           : ok=3    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+TASK [05-升级操作系统.] ************************************************************************************************
+skipping: [glusterfs-node-0]
+skipping: [glusterfs-node-1]
+skipping: [glusterfs-node-2]
+
+TASK [05-升级操作系统后如果需要重启，则重启服务器.] **********************************************************************************
+skipping: [glusterfs-node-0]
+skipping: [glusterfs-node-1]
+skipping: [glusterfs-node-2]
+
+TASK [05-等待服务器完成重启.] *********************************************************************************************
+skipping: [glusterfs-node-0]
+skipping: [glusterfs-node-1]
+skipping: [glusterfs-node-2]
+
+PLAY [安装配置chrony服务器.] ********************************************************************************************
+
+TASK [01-安装chrony软件包.] *******************************************************************************************
+changed: [glusterfs-node-0] => (item=[u'chrony'])
+changed: [glusterfs-node-2] => (item=[u'chrony'])
+changed: [glusterfs-node-1] => (item=[u'chrony'])
+
+TASK [02-配置chrony.conf.] *****************************************************************************************
+changed: [glusterfs-node-1]
+changed: [glusterfs-node-0]
+changed: [glusterfs-node-2]
+
+TASK [03-确认chrony服务启动并实现开机自启.] ***********************************************************************************
+changed: [glusterfs-node-1]
+changed: [glusterfs-node-0]
+changed: [glusterfs-node-2]
+
+TASK [04-查看chrony时间同步服务器列表(1).] **********************************************************************************
+changed: [glusterfs-node-1]
+changed: [glusterfs-node-2]
+changed: [glusterfs-node-0]
+
+TASK [04-查看chrony时间同步服务器列表(2).] **********************************************************************************
+ok: [glusterfs-node-0] => {
+    "chronyc_out.stdout_lines": [
+        "210 Number of sources = 1", 
+        "MS Name/IP address         Stratum Poll Reach LastRx Last sample               ", 
+        "===============================================================================", 
+        "^? 114.118.7.161                 1   6     1     1   -1091s[ -1091s] +/- 5246us"
+    ]
+}
+ok: [glusterfs-node-1] => {
+    "chronyc_out.stdout_lines": [
+        "210 Number of sources = 1", 
+        "MS Name/IP address         Stratum Poll Reach LastRx Last sample               ", 
+        "===============================================================================", 
+        "^? 114.118.7.161                 1   6     1     1   -1092s[ -1092s] +/- 6411us"
+    ]
+}
+ok: [glusterfs-node-2] => {
+    "chronyc_out.stdout_lines": [
+        "210 Number of sources = 1", 
+        "MS Name/IP address         Stratum Poll Reach LastRx Last sample               ", 
+        "===============================================================================", 
+        "^? 114.118.7.161                 0   6     0     -     +0ns[   +0ns] +/-    0ns"
+    ]
+}
+
+PLAY RECAP *******************************************************************************************************
+glusterfs-node-0           : ok=9    changed=7    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+glusterfs-node-1           : ok=9    changed=7    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+glusterfs-node-2           : ok=9    changed=7    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0 
 ```
 
 **重点注意：ansible-playbook的 -l 参数，需要指定为glusterfs，因为init-base.yaml文件默认指定的是所有服务器都执行，不加-l就会把hosts文件里指定的所有服务器都初始化了。**
 
-> **03-安装GlusterFS服务**
+### 3.3. 安装GlusterFS服务
 
 ```shell
 # 利用ansible-playbook安装GlusterFS服务
@@ -160,10 +247,10 @@ glusterfs-node-1           : ok=3    changed=3    unreachable=0    failed=0    s
 glusterfs-node-2           : ok=3    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
 
-> **04-验证GlusterFS服务状态**
+### 3.4. 验证GlusterFS服务状态
 
 ```shell
-# 利用ansible验证GlusterFS服务状态
+# 利用 ansible 验证 GlusterFS 服务状态
 
 (ansible2.8) [root@zdevops-master dev]# ansible glusterfs -m shell -a 'systemctl status glusterd'
 /opt/ansible2.8/lib/python2.7/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 2 is no longer supported by the Python core team. Support for it is now deprecated in cryptography, and will be removed in the next release.
@@ -222,7 +309,7 @@ glusterfs-node-2 | CHANGED | rc=0 >>
 tcp    LISTEN     0      128       *:24007                 *:*                   users:(("glusterd",pid=9868,fd=10))
 ```
 
-> **05-检测GlusterFS集群节点之间的连通性**
+### 3.5. 检测GlusterFS集群节点之间的连通性
 
 ```shell
 # 利用ansible验证GlusterFS集群节点之间的连通性
@@ -257,7 +344,7 @@ PING glusterfs-node-2 (192.168.9.97) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.223/0.264/0.297/0.028 ms
 ```
 
-> **06-配置可信池(Configure the trusted pool)**
+### 3.6. 配置可信池(Configure the trusted pool)
 
 ```shell
 # 利用ansible配置可信池(Configure the trusted pool)
@@ -290,20 +377,24 @@ Uuid: cd56bacf-f62b-4310-b193-5c600cf75a6b
 State: Peer in Cluster (Connected)
 ```
 
+---
+
 ## 4. 安装配置Heketi
 
-**(在GlusterFs服务器中任选一个节点,这里选择节点1，glusterfs-node-0，也可以将Heketi独立部署)**
+**在GlusterFs服务器中任选一个节点,这里选择节点1，glusterfs-node-0，也可以将Heketi独立部署**
 
-> **01-安装配置heketi服务**
+### 4.1. 安装配置heketi服务
 
-- **01.配置软件源**
-- **02.安装heketi和heketi-client**
-- **03.生成heketi管理用ssh-key，并配置服务器免密**
-- **04.创建heketi配置文件heketi.json**
-- **05.启动heketi服务并设置开机自启**
-- **06.创建topology.json配置文件**
-- **07.利用topoly.json配置文件创建集群**
-- **08.配置heketi管理用环境变量**
+**安装配置heketi服务采用Ansible自动化部署，主要包括以下操作步骤**
+
+- 配置软件源
+- 安装heketi和heketi-client
+- 生成heketi管理用ssh-key，并配置服务器免密
+- 创建heketi配置文件heketi.json
+- 启动heketi服务并设置开机自启
+- 创建topology.json配置文件
+- 利用topoly.json配置文件创建集群
+- 配置heketi管理用环境变量
 
 ```shell
 # 利用ansible-playbook安装配置heketi服务
@@ -362,7 +453,7 @@ glusterfs-node-2           : ok=1    changed=1    unreachable=0    failed=0    s
 localhost                  : ok=1    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
 
-> **02-检测服务状态**
+### 4.2. 检测服务状态
 
 ```shell
 # ssh到glusterfs-node-0节点检测服务状态
@@ -412,367 +503,367 @@ Id:c139bd449c952355a85a0e7d50754435     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 ```
 
-> **03-验证测试**
+### 4.3. 验证测试
 
-1. **创建卷**
-   
-   ```shell
-   # 创建一个2G大小3副本的卷
-   [root@glusterfs-node-0 ~]# heketi-cli volume create --size=2 --replica=3
-   Name: vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Size: 2
-   Volume Id: 4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Cluster Id: deb78837bdb066bd8adf51b59a7e6c7e
-   Mount: 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Mount Options: backup-volfile-servers=192.168.9.97,192.168.9.96
-   Block: false
-   Free Size: 0
-   Reserved Size: 0
-   Block Hosting Restriction: (none)
-   Block Volumes: []
-   Durability Type: replicate
-   Distribute Count: 1
-   Replica Count: 3
-   
-   # 查看创建的卷
-   [root@glusterfs-node-0 ~]# heketi-cli volume list
-   Id:4e6a0c0cdd8a4457cee30a2bb50c8dd5    Cluster:deb78837bdb066bd8adf51b59a7e6c7e    Name:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   
-   # 查看服务器挂载点
-   [root@glusterfs-node-0 ~]# df -h
-   Filesystem                                                                              Size  Used Avail Use% Mounted on
-   devtmpfs                                                                                989M     0  989M   0% /dev
-   tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
-   tmpfs                                                                                  1000M  8.9M  991M   1% /run
-   tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
-   /dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
-   /dev/sda1                                                                              1014M  168M  847M  17% /boot
-   tmpfs                                                                                   200M     0  200M   0% /run/user/0
-   /dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
-   ```
+- **创建卷**
 
-2. **挂载测试**
-   
-   ```shell
-   # 查看卷的详细信息
-   [root@glusterfs-node-0 ~]# heketi-cli volume info 4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Name: vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Size: 2
-   Volume Id: 4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Cluster Id: deb78837bdb066bd8adf51b59a7e6c7e
-   Mount: 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Mount Options: backup-volfile-servers=192.168.9.97,192.168.9.96
-   Block: false
-   Free Size: 0
-   Reserved Size: 0
-   Block Hosting Restriction: (none)
-   Block Volumes: []
-   Durability Type: replicate
-   Distribute Count: 1
-   Replica Count: 3
-   
-   # 挂载卷，mount命令中的192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5为上方heketi-cli volum info 卷id查看卷详细信息时Mount的返回值
-   [root@glusterfs-node-0 ~]# mount -t glusterfs 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5 /mnt/
-   
-   # 查看挂载详情
-   [root@glusterfs-node-0 ~]# df -h
-   Filesystem                                                                              Size  Used Avail Use% Mounted on
-   devtmpfs                                                                                989M     0  989M   0% /dev
-   tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
-   tmpfs                                                                                  1000M  8.9M  991M   1% /run
-   tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
-   /dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
-   /dev/sda1                                                                              1014M  168M  847M  17% /boot
-   tmpfs                                                                                   200M     0  200M   0% /run/user/0
-   /dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
-   192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5                                       2.0G   54M  2.0G   3% /mnt
-   
-   # 写入文件测试
-   [root@glusterfs-node-0 ~]# echo "`date` test write" >> /mnt/test.txt
-   [root@glusterfs-node-0 ~]# cat /mnt/test.txt 
-   Sun Apr  3 10:53:17 CST 2022 test write
-   
-   # 卸载卷
-   [root@glusterfs-node-0 ~]# umount /mnt/
-   
-   # 查看卷卸载后服务器挂载情况
-   [root@glusterfs-node-0 ~]# df -h
-   Filesystem                                                                              Size  Used Avail Use% Mounted on
-   devtmpfs                                                                                989M     0  989M   0% /dev
-   tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
-   tmpfs                                                                                  1000M  8.9M  991M   1% /run
-   tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
-   /dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
-   /dev/sda1                                                                              1014M  168M  847M  17% /boot
-   tmpfs                                                                                   200M     0  200M   0% /run/user/0
-   /dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
-   ```
+```shell
+# 创建一个2G大小3副本的卷
+[root@glusterfs-node-0 ~]# heketi-cli volume create --size=2 --replica=3
+Name: vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Size: 2
+Volume Id: 4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Cluster Id: deb78837bdb066bd8adf51b59a7e6c7e
+Mount: 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Mount Options: backup-volfile-servers=192.168.9.97,192.168.9.96
+Block: false
+Free Size: 0
+Reserved Size: 0
+Block Hosting Restriction: (none)
+Block Volumes: []
+Durability Type: replicate
+Distribute Count: 1
+Replica Count: 3
 
-3. **底层详细信息查看**
-   
-   **可以看出底层vg和lv的创建详情，了解底层的分配细节**
-   
-   ```shell
-   ## 节点一 glusterfs-node-0
-   
-   # 查看节点创建出的pv
-   [root@glusterfs-node-0 ~]# pvdisplay 
-     --- Physical volume ---
-     PV Name               /dev/sdb
-     VG Name               vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
-     PV Size               200.00 GiB / not usable 132.00 MiB
-     Allocatable           yes 
-     PE Size               4.00 MiB
-     Total PE              51167
-     Free PE               50649
-     Allocated PE          518
-     PV UUID               6Wtn9q-pE1L-qNdS-wT2N-oiNy-6UEL-1pUa9G
-   
-   # 查看节点创建出的vg
-   [root@glusterfs-node-0 ~]# vgdisplay 
-     --- Volume group ---
-     VG Name               vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
-     System ID             
-     Format                lvm2
-     Metadata Areas        1
-     Metadata Sequence No  6
-     VG Access             read/write
-     VG Status             resizable
-     MAX LV                0
-     Cur LV                2
-     Open LV               1
-     Max PV                0
-     Cur PV                1
-     Act PV                1
-     VG Size               199.87 GiB
-     PE Size               4.00 MiB
-     Total PE              51167
-     Alloc PE / Size       518 / 2.02 GiB
-     Free  PE / Size       50649 / <197.85 GiB
-     VG UUID               JDyEl1-Rv2D-27zU-zDIo-DSD6-wq8z-23ypMI
-   
-   # 查看节点创建出的lv
-   [root@glusterfs-node-0 ~]# lvdisplay 
-     --- Logical volume ---
-     LV Name                tp_93655a762cc3c2750aab395d7bb348a9
-     VG Name                vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
-     LV UUID                09V7QE-CkNl-3MqO-hj92-ONTc-1OhH-Kp9gQL
-     LV Write Access        read/write (activated read only)
-     LV Creation host, time glusterfs-node-0, 2022-04-03 10:35:23 +0800
-     LV Pool metadata       tp_93655a762cc3c2750aab395d7bb348a9_tmeta
-     LV Pool data           tp_93655a762cc3c2750aab395d7bb348a9_tdata
-     LV Status              available
-     # open                 2
-     LV Size                2.00 GiB
-     Allocated pool data    0.70%
-     Allocated metadata     10.32%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:4
-   
-     --- Logical volume ---
-     LV Path                /dev/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
-     LV Name                brick_93655a762cc3c2750aab395d7bb348a9
-     VG Name                vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
-     LV UUID                8PzqIP-QeW7-LHQn-JEnf-v26v-sX02-yVtY80
-     LV Write Access        read/write
-     LV Creation host, time glusterfs-node-0, 2022-04-03 10:35:24 +0800
-     LV Pool name           tp_93655a762cc3c2750aab395d7bb348a9
-     LV Status              available
-     # open                 1
-     LV Size                2.00 GiB
-     Mapped size            0.70%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:6
-   
-   ## 节点二 glusterfs-node-1
-   # 查看节点创建出的pv
-   [root@glusterfs-node-1 ~]# pvdisplay 
-     --- Physical volume ---
-     PV Name               /dev/sdb
-     VG Name               vg_dd8b89e3ac92e364871ad1a288e089be
-     PV Size               200.00 GiB / not usable 132.00 MiB
-     Allocatable           yes 
-     PE Size               4.00 MiB
-     Total PE              51167
-     Free PE               50649
-     Allocated PE          518
-     PV UUID               Xp02Bf-f3yP-ckuX-lwI3-hrYm-eDU8-4Ecn20
-   
-   # 查看节点创建出的vg
-   [root@glusterfs-node-1 ~]# vgdisplay 
-     --- Volume group ---
-     VG Name               vg_dd8b89e3ac92e364871ad1a288e089be
-     System ID             
-     Format                lvm2
-     Metadata Areas        1
-     Metadata Sequence No  6
-     VG Access             read/write
-     VG Status             resizable
-     MAX LV                0
-     Cur LV                2
-     Open LV               1
-     Max PV                0
-     Cur PV                1
-     Act PV                1
-     VG Size               199.87 GiB
-     PE Size               4.00 MiB
-     Total PE              51167
-     Alloc PE / Size       518 / 2.02 GiB
-     Free  PE / Size       50649 / <197.85 GiB
-     VG UUID               kKhfyk-is0P-RiAk-N1Vo-C3Dl-7VcE-1sUhCo
-   
-   # 查看节点创建出的lv
-   [root@glusterfs-node-1 ~]# lvdisplay 
-     --- Logical volume ---
-     LV Name                tp_14db6032ee2ed1e69f394af585d59480
-     VG Name                vg_dd8b89e3ac92e364871ad1a288e089be
-     LV UUID                DvKgju-KVA9-L4mI-VhSj-Dyx1-bnBW-OHUSYH
-     LV Write Access        read/write (activated read only)
-     LV Creation host, time glusterfs-node-1, 2022-04-03 10:35:23 +0800
-     LV Pool metadata       tp_14db6032ee2ed1e69f394af585d59480_tmeta
-     LV Pool data           tp_14db6032ee2ed1e69f394af585d59480_tdata
-     LV Status              available
-     # open                 2
-     LV Size                2.00 GiB
-     Allocated pool data    0.70%
-     Allocated metadata     10.32%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:4
-   
-     --- Logical volume ---
-     LV Path                /dev/vg_dd8b89e3ac92e364871ad1a288e089be/brick_b2c873001bcc768acecd63e970683e47
-     LV Name                brick_b2c873001bcc768acecd63e970683e47
-     VG Name                vg_dd8b89e3ac92e364871ad1a288e089be
-     LV UUID                khYq7l-NETa-FR0r-6lXc-I9BH-Yrxe-WjKdvS
-     LV Write Access        read/write
-     LV Creation host, time glusterfs-node-1, 2022-04-03 10:35:23 +0800
-     LV Pool name           tp_14db6032ee2ed1e69f394af585d59480
-     LV Status              available
-     # open                 1
-     LV Size                2.00 GiB
-     Mapped size            0.70%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:6
-   
-   ## 节点二 glusterfs-node-2
-   # 查看节点创建出的pv
-   [root@glusterfs-node-2 ~]# pvdisplay
-     --- Physical volume ---
-     PV Name               /dev/sdb
-     VG Name               vg_7fbd09414aeebd8c7a2415172089ee6d
-     PV Size               200.00 GiB / not usable 132.00 MiB
-     Allocatable           yes 
-     PE Size               4.00 MiB
-     Total PE              51167
-     Free PE               50649
-     Allocated PE          518
-     PV UUID               IrBlOc-zygh-aDec-qbuh-ESpp-FtYK-99jhIG
-   
-   # 查看节点创建出的vg
-   [root@glusterfs-node-2 ~]# vgdisplay   
-     --- Volume group ---
-     VG Name               vg_7fbd09414aeebd8c7a2415172089ee6d
-     System ID             
-     Format                lvm2
-     Metadata Areas        1
-     Metadata Sequence No  6
-     VG Access             read/write
-     VG Status             resizable
-     MAX LV                0
-     Cur LV                2
-     Open LV               1
-     Max PV                0
-     Cur PV                1
-     Act PV                1
-     VG Size               199.87 GiB
-     PE Size               4.00 MiB
-     Total PE              51167
-     Alloc PE / Size       518 / 2.02 GiB
-     Free  PE / Size       50649 / <197.85 GiB
-     VG UUID               FuCeOh-IqNy-dkbf-sito-UADP-24TV-gPCUTp
-   
-   # 查看节点创建出的lv
-   [root@glusterfs-node-2 ~]# lvdisplay   
-     --- Logical volume ---
-     LV Name                tp_f8b1b01bcd77125b7d17f2d78b744692
-     VG Name                vg_7fbd09414aeebd8c7a2415172089ee6d
-     LV UUID                aQjAyh-MHF3-s2Sp-vnZD-1A0f-u3BC-4vv82X
-     LV Write Access        read/write (activated read only)
-     LV Creation host, time glusterfs-node-2, 2022-04-03 10:35:23 +0800
-     LV Pool metadata       tp_f8b1b01bcd77125b7d17f2d78b744692_tmeta
-     LV Pool data           tp_f8b1b01bcd77125b7d17f2d78b744692_tdata
-     LV Status              available
-     # open                 2
-     LV Size                2.00 GiB
-     Allocated pool data    0.70%
-     Allocated metadata     10.32%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:4
-   
-     --- Logical volume ---
-     LV Path                /dev/vg_7fbd09414aeebd8c7a2415172089ee6d/brick_f8b1b01bcd77125b7d17f2d78b744692
-     LV Name                brick_f8b1b01bcd77125b7d17f2d78b744692
-     VG Name                vg_7fbd09414aeebd8c7a2415172089ee6d
-     LV UUID                1FH1wP-Ktt6-JpJK-K3fD-b5uP-Lb5o-fk8odF
-     LV Write Access        read/write
-     LV Creation host, time glusterfs-node-2, 2022-04-03 10:35:24 +0800
-     LV Pool name           tp_f8b1b01bcd77125b7d17f2d78b744692
-     LV Status              available
-     # open                 1
-     LV Size                2.00 GiB
-     Mapped size            0.70%
-     Current LE             512
-     Segments               1
-     Allocation             inherit
-     Read ahead sectors     auto
-     - currently set to     8192
-     Block device           253:6
-   ```
+# 查看创建的卷
+[root@glusterfs-node-0 ~]# heketi-cli volume list
+Id:4e6a0c0cdd8a4457cee30a2bb50c8dd5    Cluster:deb78837bdb066bd8adf51b59a7e6c7e    Name:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
 
-4. **删除测试卷**
-   
-   ```shell
-   [root@glusterfs-node-0 ~]# heketi-cli volume delete 4e6a0c0cdd8a4457cee30a2bb50c8dd5
-   Volume 4e6a0c0cdd8a4457cee30a2bb50c8dd5 deleted
-   
-   [root@glusterfs-node-0 ~]# df -h
-   Filesystem               Size  Used Avail Use% Mounted on
-   devtmpfs                 989M     0  989M   0% /dev
-   tmpfs                   1000M     0 1000M   0% /dev/shm
-   tmpfs                   1000M  8.8M  991M   1% /run
-   tmpfs                   1000M     0 1000M   0% /sys/fs/cgroup
-   /dev/mapper/centos-root   37G  1.6G   36G   5% /
-   /dev/sda1               1014M  168M  847M  17% /boot
-   tmpfs                    200M     0  200M   0% /run/user/0
-   ```
+# 查看服务器挂载点
+[root@glusterfs-node-0 ~]# df -h
+Filesystem                                                                              Size  Used Avail Use% Mounted on
+devtmpfs                                                                                989M     0  989M   0% /dev
+tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
+tmpfs                                                                                  1000M  8.9M  991M   1% /run
+tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
+/dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
+/dev/sda1                                                                              1014M  168M  847M  17% /boot
+tmpfs                                                                                   200M     0  200M   0% /run/user/0
+/dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
+```
 
-## 5. k8s集群对接GlusterFs(命令行和KubeSphere图形化)
+- **挂载测试**
 
-### 1. k8s命令行手动配置
+```shell
+# 查看卷的详细信息
+[root@glusterfs-node-0 ~]# heketi-cli volume info 4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Name: vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Size: 2
+Volume Id: 4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Cluster Id: deb78837bdb066bd8adf51b59a7e6c7e
+Mount: 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Mount Options: backup-volfile-servers=192.168.9.97,192.168.9.96
+Block: false
+Free Size: 0
+Reserved Size: 0
+Block Hosting Restriction: (none)
+Block Volumes: []
+Durability Type: replicate
+Distribute Count: 1
+Replica Count: 3
+
+# 挂载卷，mount命令中的192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5为上方heketi-cli volum info 卷id查看卷详细信息时Mount的返回值
+[root@glusterfs-node-0 ~]# mount -t glusterfs 192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5 /mnt/
+
+# 查看挂载详情
+[root@glusterfs-node-0 ~]# df -h
+Filesystem                                                                              Size  Used Avail Use% Mounted on
+devtmpfs                                                                                989M     0  989M   0% /dev
+tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
+tmpfs                                                                                  1000M  8.9M  991M   1% /run
+tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
+/dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
+/dev/sda1                                                                              1014M  168M  847M  17% /boot
+tmpfs                                                                                   200M     0  200M   0% /run/user/0
+/dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
+192.168.9.95:vol_4e6a0c0cdd8a4457cee30a2bb50c8dd5                                       2.0G   54M  2.0G   3% /mnt
+
+# 写入文件测试
+[root@glusterfs-node-0 ~]# echo "`date` test write" >> /mnt/test.txt
+[root@glusterfs-node-0 ~]# cat /mnt/test.txt 
+Sun Apr  3 10:53:17 CST 2022 test write
+
+# 卸载卷
+[root@glusterfs-node-0 ~]# umount /mnt/
+
+# 查看卷卸载后服务器挂载情况
+[root@glusterfs-node-0 ~]# df -h
+Filesystem                                                                              Size  Used Avail Use% Mounted on
+devtmpfs                                                                                989M     0  989M   0% /dev
+tmpfs                                                                                  1000M     0 1000M   0% /dev/shm
+tmpfs                                                                                  1000M  8.9M  991M   1% /run
+tmpfs                                                                                  1000M     0 1000M   0% /sys/fs/cgroup
+/dev/mapper/centos-root                                                                  37G  1.6G   36G   5% /
+/dev/sda1                                                                              1014M  168M  847M  17% /boot
+tmpfs                                                                                   200M     0  200M   0% /run/user/0
+/dev/mapper/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4-brick_93655a762cc3c2750aab395d7bb348a9  2.0G   33M  2.0G   2% /var/lib/heketi/mounts/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
+```
+
+- **底层详细信息查看**
+
+**可以看出底层vg和lv的创建详情，了解底层的分配细节**
+
+```shell
+## 节点一 glusterfs-node-0
+
+# 查看节点创建出的pv
+[root@glusterfs-node-0 ~]# pvdisplay 
+  --- Physical volume ---
+  PV Name               /dev/sdb
+  VG Name               vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
+  PV Size               200.00 GiB / not usable 132.00 MiB
+  Allocatable           yes 
+  PE Size               4.00 MiB
+  Total PE              51167
+  Free PE               50649
+  Allocated PE          518
+  PV UUID               6Wtn9q-pE1L-qNdS-wT2N-oiNy-6UEL-1pUa9G
+
+# 查看节点创建出的vg
+[root@glusterfs-node-0 ~]# vgdisplay 
+  --- Volume group ---
+  VG Name               vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
+  System ID             
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  6
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                2
+  Open LV               1
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               199.87 GiB
+  PE Size               4.00 MiB
+  Total PE              51167
+  Alloc PE / Size       518 / 2.02 GiB
+  Free  PE / Size       50649 / <197.85 GiB
+  VG UUID               JDyEl1-Rv2D-27zU-zDIo-DSD6-wq8z-23ypMI
+
+# 查看节点创建出的lv
+[root@glusterfs-node-0 ~]# lvdisplay 
+  --- Logical volume ---
+  LV Name                tp_93655a762cc3c2750aab395d7bb348a9
+  VG Name                vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
+  LV UUID                09V7QE-CkNl-3MqO-hj92-ONTc-1OhH-Kp9gQL
+  LV Write Access        read/write (activated read only)
+  LV Creation host, time glusterfs-node-0, 2022-04-03 10:35:23 +0800
+  LV Pool metadata       tp_93655a762cc3c2750aab395d7bb348a9_tmeta
+  LV Pool data           tp_93655a762cc3c2750aab395d7bb348a9_tdata
+  LV Status              available
+  # open                 2
+  LV Size                2.00 GiB
+  Allocated pool data    0.70%
+  Allocated metadata     10.32%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:4
+
+  --- Logical volume ---
+  LV Path                /dev/vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4/brick_93655a762cc3c2750aab395d7bb348a9
+  LV Name                brick_93655a762cc3c2750aab395d7bb348a9
+  VG Name                vg_f07e0b11c6c8e4da5bbb24b0b11d7fd4
+  LV UUID                8PzqIP-QeW7-LHQn-JEnf-v26v-sX02-yVtY80
+  LV Write Access        read/write
+  LV Creation host, time glusterfs-node-0, 2022-04-03 10:35:24 +0800
+  LV Pool name           tp_93655a762cc3c2750aab395d7bb348a9
+  LV Status              available
+  # open                 1
+  LV Size                2.00 GiB
+  Mapped size            0.70%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:6
+
+## 节点二 glusterfs-node-1
+# 查看节点创建出的pv
+[root@glusterfs-node-1 ~]# pvdisplay 
+  --- Physical volume ---
+  PV Name               /dev/sdb
+  VG Name               vg_dd8b89e3ac92e364871ad1a288e089be
+  PV Size               200.00 GiB / not usable 132.00 MiB
+  Allocatable           yes 
+  PE Size               4.00 MiB
+  Total PE              51167
+  Free PE               50649
+  Allocated PE          518
+  PV UUID               Xp02Bf-f3yP-ckuX-lwI3-hrYm-eDU8-4Ecn20
+
+# 查看节点创建出的vg
+[root@glusterfs-node-1 ~]# vgdisplay 
+  --- Volume group ---
+  VG Name               vg_dd8b89e3ac92e364871ad1a288e089be
+  System ID             
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  6
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                2
+  Open LV               1
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               199.87 GiB
+  PE Size               4.00 MiB
+  Total PE              51167
+  Alloc PE / Size       518 / 2.02 GiB
+  Free  PE / Size       50649 / <197.85 GiB
+  VG UUID               kKhfyk-is0P-RiAk-N1Vo-C3Dl-7VcE-1sUhCo
+
+# 查看节点创建出的lv
+[root@glusterfs-node-1 ~]# lvdisplay 
+  --- Logical volume ---
+  LV Name                tp_14db6032ee2ed1e69f394af585d59480
+  VG Name                vg_dd8b89e3ac92e364871ad1a288e089be
+  LV UUID                DvKgju-KVA9-L4mI-VhSj-Dyx1-bnBW-OHUSYH
+  LV Write Access        read/write (activated read only)
+  LV Creation host, time glusterfs-node-1, 2022-04-03 10:35:23 +0800
+  LV Pool metadata       tp_14db6032ee2ed1e69f394af585d59480_tmeta
+  LV Pool data           tp_14db6032ee2ed1e69f394af585d59480_tdata
+  LV Status              available
+  # open                 2
+  LV Size                2.00 GiB
+  Allocated pool data    0.70%
+  Allocated metadata     10.32%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:4
+
+  --- Logical volume ---
+  LV Path                /dev/vg_dd8b89e3ac92e364871ad1a288e089be/brick_b2c873001bcc768acecd63e970683e47
+  LV Name                brick_b2c873001bcc768acecd63e970683e47
+  VG Name                vg_dd8b89e3ac92e364871ad1a288e089be
+  LV UUID                khYq7l-NETa-FR0r-6lXc-I9BH-Yrxe-WjKdvS
+  LV Write Access        read/write
+  LV Creation host, time glusterfs-node-1, 2022-04-03 10:35:23 +0800
+  LV Pool name           tp_14db6032ee2ed1e69f394af585d59480
+  LV Status              available
+  # open                 1
+  LV Size                2.00 GiB
+  Mapped size            0.70%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:6
+
+## 节点二 glusterfs-node-2
+# 查看节点创建出的pv
+[root@glusterfs-node-2 ~]# pvdisplay
+  --- Physical volume ---
+  PV Name               /dev/sdb
+  VG Name               vg_7fbd09414aeebd8c7a2415172089ee6d
+  PV Size               200.00 GiB / not usable 132.00 MiB
+  Allocatable           yes 
+  PE Size               4.00 MiB
+  Total PE              51167
+  Free PE               50649
+  Allocated PE          518
+  PV UUID               IrBlOc-zygh-aDec-qbuh-ESpp-FtYK-99jhIG
+
+# 查看节点创建出的vg
+[root@glusterfs-node-2 ~]# vgdisplay   
+  --- Volume group ---
+  VG Name               vg_7fbd09414aeebd8c7a2415172089ee6d
+  System ID             
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  6
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                2
+  Open LV               1
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               199.87 GiB
+  PE Size               4.00 MiB
+  Total PE              51167
+  Alloc PE / Size       518 / 2.02 GiB
+  Free  PE / Size       50649 / <197.85 GiB
+  VG UUID               FuCeOh-IqNy-dkbf-sito-UADP-24TV-gPCUTp
+
+# 查看节点创建出的lv
+[root@glusterfs-node-2 ~]# lvdisplay   
+  --- Logical volume ---
+  LV Name                tp_f8b1b01bcd77125b7d17f2d78b744692
+  VG Name                vg_7fbd09414aeebd8c7a2415172089ee6d
+  LV UUID                aQjAyh-MHF3-s2Sp-vnZD-1A0f-u3BC-4vv82X
+  LV Write Access        read/write (activated read only)
+  LV Creation host, time glusterfs-node-2, 2022-04-03 10:35:23 +0800
+  LV Pool metadata       tp_f8b1b01bcd77125b7d17f2d78b744692_tmeta
+  LV Pool data           tp_f8b1b01bcd77125b7d17f2d78b744692_tdata
+  LV Status              available
+  # open                 2
+  LV Size                2.00 GiB
+  Allocated pool data    0.70%
+  Allocated metadata     10.32%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:4
+
+  --- Logical volume ---
+  LV Path                /dev/vg_7fbd09414aeebd8c7a2415172089ee6d/brick_f8b1b01bcd77125b7d17f2d78b744692
+  LV Name                brick_f8b1b01bcd77125b7d17f2d78b744692
+  VG Name                vg_7fbd09414aeebd8c7a2415172089ee6d
+  LV UUID                1FH1wP-Ktt6-JpJK-K3fD-b5uP-Lb5o-fk8odF
+  LV Write Access        read/write
+  LV Creation host, time glusterfs-node-2, 2022-04-03 10:35:24 +0800
+  LV Pool name           tp_f8b1b01bcd77125b7d17f2d78b744692
+  LV Status              available
+  # open                 1
+  LV Size                2.00 GiB
+  Mapped size            0.70%
+  Current LE             512
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:6
+```
+
+- **删除测试卷**
+
+```shell
+[root@glusterfs-node-0 ~]# heketi-cli volume delete 4e6a0c0cdd8a4457cee30a2bb50c8dd5
+Volume 4e6a0c0cdd8a4457cee30a2bb50c8dd5 deleted
+
+[root@glusterfs-node-0 ~]# df -h
+Filesystem               Size  Used Avail Use% Mounted on
+devtmpfs                 989M     0  989M   0% /dev
+tmpfs                   1000M     0 1000M   0% /dev/shm
+tmpfs                   1000M  8.8M  991M   1% /run
+tmpfs                   1000M     0 1000M   0% /sys/fs/cgroup
+/dev/mapper/centos-root   37G  1.6G   36G   5% /
+/dev/sda1               1014M  168M  847M  17% /boot
+tmpfs                    200M     0  200M   0% /run/user/0
+```
+
+---
+
+## 5. k8s集群对接GlusterFS-原生命令行
 
 **所有操作都在k8s的master节点上执行,操作根目录为/root/zdevops**
 
-> **01-所有的k8s节点均安装glusterfs客户端**
+### 5.1. 所有的k8s节点均安装glusterfs客户端
 
 **此步骤可以忽略，ansible初始化时已安装**
 
@@ -780,7 +871,7 @@ Id:da8f9ae974c342b5225265cd414ebe7f     Cluster:deb78837bdb066bd8adf51b59a7e6c7e
 [root@ks-k8s-master-0 ~]#  yum install glusterfs-fuse -y
 ```
 
-> **02-创建heketi使用的Secret的认证密码**
+### 5.2. 创建heketi使用的Secret的认证密码
 
 ```shell
 # 创建glusterfs目录,并切换到该目录
@@ -812,7 +903,7 @@ NAME            TYPE                      DATA   AGE
 heketi-secret   kubernetes.io/glusterfs   1      16s
 ```
 
-> **03-创建StorageClass**
+### 5.3. 创建StorageClass
 
 ```shell
 # 创建StorageClass定义文件
@@ -851,7 +942,7 @@ local (default)   openebs.io/local          Delete          WaitForFirstConsumer
 - **parameters.secretNamespace:** k8s中Secret资源定义中的metadata.namespace
 - **parameters.volumetype:** 创建的卷类型和副本数，这里是3副本复制卷
 
-> **04-创建pvc测试**
+### 5.4. 创建pvc测试
 
 ```shell
 # 创建pvc定义文件
@@ -882,13 +973,13 @@ heketi-pvc   Bound    pvc-019107e4-8cb1-44a7-940e-2ab2aecb1eac   1Gi        RWO 
 
 **注意创建的pvc的状态，如果是Pending，说明连接存储有问题**
 
-- ```yaml
-  [root@ks-k8s-master-0 glusterfs]# kubectl get pvc
-  NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-  heketi-pvc   Pending                                      glusterfs      6m38s
-  ```
+```shell
+[root@ks-k8s-master-0 glusterfs]# kubectl get pvc
+NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+heketi-pvc   Pending                                      glusterfs      6m38s
+```
 
-> **05-创建测试Pod挂载pvc**
+### 5.5. 创建测试Pod挂载pvc
 
 ```shell
 # 创建pod定义文件
@@ -948,7 +1039,7 @@ tmpfs                    15.7G         0     15.7G   0% /proc/scsi
 tmpfs                    15.7G         0     15.7G   0% /sys/firmware 
 ```
 
-> **06-存储服务器测查看**
+### 5.6. 登录存储服务器查看底层变化
 
 ```shell
 # 查看卷的信息
@@ -1014,7 +1105,7 @@ Snapshot Factor: 1.00
   Block device           253:6
 ```
 
-> **07-清理测试资源**
+### 5.7. 清理测试资源
 
 ```shell
 # 清理测试的pod、pvc
@@ -1030,123 +1121,131 @@ storageclass.storage.k8s.io "glusterfs" deleted
 secret "heketi-secret" deleted
 ```
 
-### 2. Kubesphere图形化配置
+---
 
-> **01-创建密钥**
+## 6. k8s集群对接GlusterFS-KubeSphere图形化配置
 
-- 平台管理->集群管理->配置->保密字典
+### 6.1. 创建密钥
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-plat.png" alt="kube-plat" style="zoom:50%;" />
+平台管理->集群管理->配置->保密字典。
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-cluster.png" alt="kube-cluster" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-plat.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-conf.png" alt="kube-conf" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-cluster.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-secrets.png" alt="kube-secrets" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-conf.png)
 
-- 创建
-  
-  - 名称：heketi-secret
-  
-  - 项目：kube-system
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-0.png" alt="kube-glusterfs-secrets-0" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-secrets.png)
+
+点击**创建**，创建保密字典。
+
+- 名称：heketi-secret
+
+- 项目：kube-system
+
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-secrets-0.png)
 
 - 数据设置，类型选择Opaque-> 添加数据->创建
-  
+
   - 键：key
   - 值：YWRtaW5AUEBzc1cwcmQ=
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-1.png" alt="kube-glusterfs-secrets-1" style="zoom:50%;" />
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-2.png" alt="kube-glusterfs-secrets-2" style="zoom:50%;" />
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-secrets-3.png" alt="kube-glusterfs-secrets-3" style="zoom:50%;" />
 
-> **02-创建存储类型**
+  ![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-secrets-1.png)
 
-- 平台管理-> 存储->存储类型->创建
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-0.png" alt="kube-glusterfs-storageclasses-0" style="zoom:50%;" />
-  
-  <img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-1.png" alt="kube-glusterfs-storageclasses-1" style="zoom:50%;" />
+  ![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-secrets-2.png)
 
-- 创建存储类型
-  
-  - 存储名称：glusterfs
-  - 存储类型：glusterfs
-  - 创建存储类型的详细信息
-    - 存储卷扩容：是
-    - 回收机制：Delete
-    - 访问模式：ReadWriteOnce、ReadOnlyMany、ReadWriteMany
-    - 存储系统：kubernetes.io/glusterfs
-    - 存储卷绑定模式：立即绑定
-    - REST URL：192.168.9.95:48080
-    - 集群ID：deb78837bdb066bd8adf51b59a7e6c7e（heketi-cli cluster list命令返回的集群id ）
-    - 开启REST认证：是
-    - REST用户：admin (heketi服务的admin用户)
-    - 密钥所属项目：kube-system
-    - 密钥名称：heketi-secret （上面创建的secert名称）
-    - GID最小值：留空使用默认值
-    - GID最大值：留空使用默认值
-    - 存储卷类型：replicate:3
+  ![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-secrets-3.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-2.png" alt="kube-glusterfs-storageclasses-2" style="zoom:50%;" />
+### 6.2. 创建存储类型
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-3.png" alt="kube-glusterfs-storageclasses-3" style="zoom:50%;" />
+平台管理-> 存储->存储类型->创建。
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-4.png" alt="kube-glusterfs-storageclasses-4" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-0.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-5.png" alt="kube-glusterfs-storageclasses-5" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-1.png)
 
-- 查看存储类型是否创建成功
+点击**创建**，创建存储类型。
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-storageclasses-6.png" alt="kube-glusterfs-storageclasses-6" style="zoom:50%;" />
+- 存储名称：glusterfs
+- 存储类型：glusterfs
+- 创建存储类型的详细信息
+  - 存储卷扩容：是
+  - 回收机制：Delete
+  - 访问模式：ReadWriteOnce、ReadOnlyMany、ReadWriteMany
+  - 存储系统：kubernetes.io/glusterfs
+  - 存储卷绑定模式：立即绑定
+  - REST URL：192.168.9.95:48080
+  - 集群ID：deb78837bdb066bd8adf51b59a7e6c7e（heketi-cli cluster list命令返回的集群id ）
+  - 开启REST认证：是
+  - REST用户：admin (heketi服务的admin用户)
+  - 密钥所属项目：kube-system
+  - 密钥名称：heketi-secret （上面创建的secert名称）
+  - GID最小值：留空使用默认值
+  - GID最大值：留空使用默认值
+  - 存储卷类型：replicate:3
 
-> **03-创建存储卷进行测试**
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-2.png)
 
-- 平台管理->存储->存储卷
-  - 名称：glusterfs-test （可自定义）
-  - 项目：default （可自定义）
-  - 存储类型：glusterfs
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-3.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-0.png" alt="kube-glusterfs-pvc-0" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-4.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-1.png" alt="kube-glusterfs-pvc-1" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-5.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-2.png" alt="kube-glusterfs-pvc-2" style="zoom:50%;" />
+查看存储类型是否创建成功。
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-3.png" alt="kube-glusterfs-pvc-3" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-storageclasses-6.png)
 
-> **04-验证测试卷是否创建成功状态为**
+### 6.3. 创建存储卷进行测试
 
-- **准备就绪**即为成功
+平台管理->存储->存储卷。
+- 名称：glusterfs-test （可自定义）
+- 项目：default （可自定义）
+- 存储类型：glusterfs
 
-<img src="https://gitee.com/zdevops/res/raw/main/cloudnative/glusterfs/kubesphere-glusterfs-9.jpg" style="zoom:80%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-0.png)
 
-- **但是写文档的时候创建失败了**
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-1.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-4.png" alt="kube-glusterfs-pvc-4" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-2.png)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-5.png" alt="kube-glusterfs-pvc-5" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-3.png)
 
-- 尝试解决
-  
-  - 查看存储卷配置，发现都是大写，怀疑是否是参数名称的问题，尝试按手工配置的参数修改，结果修改报错
+### 6.4. 验证测试卷是否创建成功
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-6.png" alt="kube-glusterfs-pvc-6" style="zoom:50%;" />
+**正常情况下，准备就绪**即为成功。
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-7.png" alt="kube-glusterfs-pvc-7" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kubesphere-glusterfs-9.jpg)
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-8.png" alt="kube-glusterfs-pvc-8" style="zoom:50%;" />
+**但是写文档的时候创建失败了。**
 
-<img src="https://gitee.com/zdevops/res/raw/main/z-notes/kube-glusterfs/kube-glusterfs-pvc-9.png" alt="kube-glusterfs-pvc-9" style="zoom:50%;" />
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-4.png)
 
-## 6. 常见问题
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-5.png)
 
-> **01-创建集群时报错解决办法**
+> **尝试解决**
 
-**如果数据盘不是新盘曾经被使用过，创建集群时会报错，可按下面的方法处理**
+查看存储卷配置，发现都是大写，怀疑是否是参数名称的问题，尝试按手工配置的参数修改，结果修改报错。
+
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-6.png)
+
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-7.png)
+
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-8.png)
+
+![](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-glusterfs-pvc-9.png)
+
+## 6. 遗留问题
+
+图形化对接GlusterFS失败，问题有待解决，不确定是否为BUG。
+
+KubeSphere3.2.1版本，暂时请使用命令行的方式对接GlusterFS。
+
+## 7. 常见问题
+
+### 7.1. 创建集群时报错解决办法
+
+**如果数据盘不是新盘曾经被使用过，创建集群时会报错，可按下面的方法处理。**
 
 ```shell
 [root@glusterfs-node-0 ~]# heketi-cli topology load --json=/etc/heketi/topology.json
@@ -1178,34 +1277,33 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
   Physical volume "/dev/sdb" successfully created.
 ```
 
-> **02-创建pvc时，状态为pending**
+### 7.2. 创建pvc时，状态为pending
 
-- 现象
-  
-  ```shell
-  [root@ks-k8s-master-0 glusterfs]# kubectl get pvc -o wide
-  NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
-  heketi-pvc   Pending                                      glusterfs      6m10s   Filesystem
-  [root@ks-k8s-master-0 glusterfs]# kubectl describe pvc heketi-pvc 
-  Name:          heketi-pvc
-  Namespace:     default
-  StorageClass:  glusterfs
-  Status:        Pending
-  Volume:        
-  Labels:        <none>
-  Annotations:   volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/glusterfs
-  Finalizers:    [kubernetes.io/pvc-protection]
-  Capacity:      
-  Access Modes:  
-  VolumeMode:    Filesystem
-  Used By:       heketi-pod
-  Events:
-    Type     Reason              Age                   From                         Message
-    ----     ------              ----                  ----                         -------
-    Warning  ProvisioningFailed  22s (x10 over 6m18s)  persistentvolume-controller  Failed to provision volume with StorageClass "glusterfs": failed to create volume: failed to create volume: see kube-controller-manager.log for details
-  ```
+- 问题现象
 
+```shell
+[root@ks-k8s-master-0 glusterfs]# kubectl get pvc -o wide
+NAME         STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE     VOLUMEMODE
+heketi-pvc   Pending                                      glusterfs      6m10s   Filesystem
+[root@ks-k8s-master-0 glusterfs]# kubectl describe pvc heketi-pvc 
+Name:          heketi-pvc
+Namespace:     default
+StorageClass:  glusterfs
+Status:        Pending
+Volume:        
+Labels:        <none>
+Annotations:   volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/glusterfs
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      
+Access Modes:  
+VolumeMode:    Filesystem
+Used By:       heketi-pod
+Events:
+  Type     Reason              Age                   From                         Message
+  ----     ------              ----                  ----                         -------
+  Warning  ProvisioningFailed  22s (x10 over 6m18s)  persistentvolume-controller  Failed to provision volume with StorageClass "glusterfs": failed to create volume: failed to create volume: see kube-controller-manager.log for details
 ```
+
 - 解决方案
 
 ```shell
@@ -1218,19 +1316,17 @@ Hello from Heketi
 Apr  3 15:18:21 glusterfs-node-0 heketi: [jwt] ERROR 2022/04/03 15:18:21 heketi/middleware/jwt.go:73:middleware.(*HeketiJwtClaims).Valid: iat validation failed: Token used before issued, time now: 2022-04-03 15:18:21 +0800 CST, time issued: 2022-04-03 15:35:02 +0800 CST
 ```
 
+---
+
 ## 7. 总结
 
 以上内容详细记录了GlusterFS安装部署过程以及KubeSphere对接GlusterFS的全过程，部署过程中k8s命令行对接GlusterFS成功，但是在KubeSphere图形化对接的过程中出现异常，后续解决后，我再更新文档。
 
-> **01-遗留问题**
-
-图形化对接GlusterFS失败，问题有待解决。
-
 > **参考文档**
 
-1. [GlusterFS](https://docs.gluster.org/en/latest/Quick-Start-Guide/Quickstart/)
+- [GlusterFS](https://docs.gluster.org/en/latest/Quick-Start-Guide/Quickstart/)
 
-2. https://github.com/heketi/heketi
+- https://github.com/heketi/heketi
 
 > **Get文档**
 
@@ -1242,6 +1338,10 @@ Apr  3 15:18:21 glusterfs-node-0 heketi: [jwt] ERROR 2022/04/03 15:18:21 heketi/
 - Github https://github.com/devops/ansible-zdevops
 - Gitee https://gitee.com/zdevops/ansible-zdevops
 
+> **B 站**
+
+- [老 Z 手记](https://space.bilibili.com/1039301316) https://space.bilibili.com/1039301316
+
 > **版权声明** 
 
 - 所有内容均属于原创，整理不易，感谢收藏，转载请标明出处。
@@ -1251,5 +1351,6 @@ Apr  3 15:18:21 glusterfs-node-0 heketi: [jwt] ERROR 2022/04/03 15:18:21 heketi/
 - 昵称：老Z
 - 坐标：山东济南
 - 职业：运维架构师/高级运维工程师=**运维**
+- 微信：zdevops
 - 关注的领域：云计算/云原生技术运维，自动化运维
 - 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
