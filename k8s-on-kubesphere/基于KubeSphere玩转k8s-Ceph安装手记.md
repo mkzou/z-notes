@@ -1,12 +1,12 @@
-# 基于KubeSphere玩转k8s-Ceph安装手记
+# 基于 KubeSphere 玩转 k8s-Ceph 安装手记
 
-**大家好，我是老Z！**
+**大家好，我是老 Z！**
 
 > 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
 >
 > 如果你喜欢本文，请分享给你的小伙伴！
 
-**本系列文档内容涵盖(但不限于)以下技术领域：**
+**本系列文档内容涵盖 (但不限于) 以下技术领域：**
 
 > - **KubeSphere**
 >
@@ -16,34 +16,34 @@
 >
 > - **自动化运维**
 >
-> - **CNCF技术栈**
+> - **CNCF 技术栈**
 
 ## 1. 本文简介
 
-本文简要介绍了几种常见的Ceph分布式存储安装方案，重点演示了Ceph-deploy方案的详细操作过程。
+本文简要介绍了几种常见的 Ceph 分布式存储安装方案，重点演示了 Ceph-deploy 方案的详细操作过程。
 
-由于Ceph-deploy已经被官方所放弃，因此，本文适用于学习测试环境。
+由于 Ceph-deploy 已经被官方所放弃，因此，本文适用于学习测试环境。
 
 > 本文知识量
 
-- 阅读时长：20分
-- 行：1651
+- 阅读时长：20 分
+- 行：1600+
 - 单词：8000+
 - 字符：74400+
-- 图片：0张
+- 图片：0 张
 
 > **本文知识点**
 
 - 定级：**入门级**
-- Ceph的常用安装部署
-- Ceph-deploy安装部署Ceph集群
-- Ceph-deploy扩展Ceph集群
+- Ceph 的常用安装部署
+- Ceph-deploy 安装部署 Ceph 集群
+- Ceph-deploy 扩展 Ceph 集群
 
 > **演示服务器配置**
 
 |     主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
 | :-------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
-|  zdeops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
+|  zdeops-master  | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible 运维控制节点        |
 | ks-k8s-master-0 | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-1 | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
 | ks-k8s-master-2 | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
@@ -58,19 +58,19 @@
 - Ansible：**2.8.20**
 - Ceph：**Octopus(15.2.16 )** 
 
----
 
-## 2. Ansible配置
 
-### 2.1. 增加hosts配置
+## 2. Ansible 配置
+
+### 2.1. 增加 hosts 配置
 
 ```ini
 # 主要增加 ceph 节点配置
 
 [ceph]
-ceph-node-0 ansible_ssh_host=192.168.9.81 host_name=ceph-node-0
-ceph-node-1 ansible_ssh_host=192.168.9.82 host_name=ceph-node-1
-ceph-node-2 ansible_ssh_host=192.168.9.83 host_name=ceph-node-2
+ceph-node-0 ansible_ssh_host=192.168.9.85 host_name=ceph-node-0
+ceph-node-1 ansible_ssh_host=192.168.9.86 host_name=ceph-node-1
+ceph-node-2 ansible_ssh_host=192.168.9.87 host_name=ceph-node-2
 
 [servers:children]
 k8s
@@ -79,51 +79,51 @@ es
 ceph
 ```
 
----
 
-## 3. Ceph安装方式介绍
+
+## 3. Ceph 安装方式介绍
 
 ### 3.1. Ceph-deploy
 
-- [Ceph-deploy](https://docs.ceph.com/projects/ceph-deploy/en/latest/)是一个快速部署Ceph集群的工具。
+- [Ceph-deploy](https://docs.ceph.com/projects/ceph-deploy/en/latest/) 是一个快速部署 Ceph 集群的工具。
 
-- **Ceph-deploy不再(actively)积极维护。**
--  **在高于Nautilus的版本上没有测试过。**
+- **Ceph-deploy 不再 (actively) 积极维护。**
+- **在高于 Nautilus 的版本上没有测试过。**
 - **不支持 RHEL8, CentOS 8, 或者更新的操作系统。**
-- CentOS 7.9 搭配 Ceph Nautilus版本时首选，但是**Ceph Nautilus**(2019-05-01首发)有点老旧了能不选还是不要选了。
+- CentOS 7.9 搭配 Ceph Nautilus 版本时首选，但是 **Ceph Nautilus**(2019-05-01 首发) 有点老旧了能不选还是不要选了。
 
-> CentOS 8 我还没有玩过，也没有计划去搞，所有学习测试环境最终选择了CentOS7.9搭配**Octopus**的方案。
+> CentOS 8 我还没有玩过，也没有计划去搞，所有学习测试环境最终选择了 CentOS7.9 搭配 **Octopus** 的方案。
 
 ### 3.2. Cephadm
 
-- [Cephadm](https://docs.ceph.com/en/quincy/cephadm/#cephadm) 使用容器和systemd安装和管理Ceph集群，并与CLI和仪表板GUI紧密集成。
+- [Cephadm](https://docs.ceph.com/en/quincy/cephadm/#cephadm) 使用容器和 systemd 安装和管理 Ceph 集群，并与 CLI 和仪表板 GUI 紧密集成。
 
-- Cephadm仅支持Octopus  v15.2.0和更新版本。
+- Cephadm 仅支持 Octopus  v15.2.0 和更新版本。
 
-- Cephadm与新的orchestrator API完全集成，并完全支持新的CLI和仪表盘功能来管理集群部署。
+- Cephadm 与新的 orchestrator API 完全集成，并完全支持新的 CLI 和仪表盘功能来管理集群部署。
 
-- Cephadm需要容器支持(podman或docker)和Python 3。
+- Cephadm 需要容器支持 (podman 或 docker) 和 Python 3。
 
-- 非Kubernetes环境首选。
+- 非 Kubernetes 环境首选。
 
 ### 3.3. Rook
 
-- [Rook](https://rook.io/)部署和管理运行在Kubernetes中的Ceph集群，同时也支持通过Kubernetes APi管理存储资源和provisionin。
-- 官方推荐使用Rook在Kubernetes中运行Ceph，或者将现有的Ceph存储集群连接到Kubernetes。
-- Rook只支持Nautilus和Ceph的更新版本。
-- Rook 支持新的orchestrator API，并完全支持在CLI和仪表盘 中的新的管理功能。
+- [Rook](https://rook.io/) 部署和管理运行在 Kubernetes 中的 Ceph 集群，同时也支持通过 Kubernetes APi 管理存储资源和 provisionin。
+- 官方推荐使用 Rook 在 Kubernetes 中运行 Ceph，或者将现有的 Ceph 存储集群连接到 Kubernetes。
+- Rook 只支持 Nautilus 和 Ceph 的更新版本。
+- Rook 支持新的 orchestrator API，并完全支持在 CLI 和仪表盘 中的新的管理功能。
 
-- Rook是在Kubernetes上运行Ceph的首选方法，或者是将Kubernetes集群连接到现有(外部)Ceph集群的首选方法。
+- Rook 是在 Kubernetes 上运行 Ceph 的首选方法，或者是将 Kubernetes 集群连接到现有 (外部)Ceph 集群的首选方法。
 
 ### 3.4. 手动安装
 
-你也可以不采用任何部署工具，一步步的手工安装Ceph集群，安装软件包、初始化集群、安装Mon、安装配置OSD等。
+你也可以不采用任何部署工具，一步步的手工安装 Ceph 集群，安装软件包、初始化集群、安装 Mon、安装配置 OSD 等。
 
 具体可以参考[官方手工安装文档](https://docs.ceph.com/en/latest/install/index_manual/)，除非你要自己编写自动化部署工具，可以参考官方的手工操作方式，否则不建议采用手工的方式。
 
----
 
-## 4. Ceph节点初始化配置
+
+## 4. Ceph 节点初始化配置
 
 ### 4.1. 检测服务器连通性
 
@@ -162,7 +162,7 @@ ceph-node-0 | SUCCESS => {
 
 > **执行任务命令**
 
-**重点注意：ansible-playbook的 -l 参数，需要指定为ceph，因为init-base.yaml文件默认指定的是所有服务器都执行，不加-l就会把hosts文件里指定的所有服务器都初始化了。**
+**重点注意：ansible-playbook 的 -l 参数，需要指定为 ceph，因为 init-base.yaml 文件默认指定的是所有服务器都执行，不加-l 就会把 hosts 文件里指定的所有服务器都初始化了。**
 
 ```shell
 # 利用 ansible-playbook 初始化服务器配置
@@ -267,7 +267,7 @@ ceph-node-1                : ok=9    changed=7    unreachable=0    failed=0    s
 ceph-node-2                : ok=9    changed=7    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0
 ```
 
-### 4.3. EPEL软件源配置
+### 4.3. EPEL 软件源配置
 
 > **执行任务命令**
 
@@ -400,7 +400,7 @@ Installed:
 Complete!
 ```
 
-### 4.4. Ceph软件源配置
+### 4.4. Ceph 软件源配置
 
 >**执行任务命令**
 
@@ -611,15 +611,15 @@ type=rpm-md
 gpgkey=https://download.ceph.com/keys/release.asc
 ```
 
----
 
-## 5. Ceph-deploy安装配置
 
-**本节所有操作都在ceph-node-0节点执行**。
+## 5. Ceph-deploy 安装配置
 
-### 5.1. Ceph-deploy节点SSH免密配置
+**本节所有操作都在 ceph-node-0 节点执行**。
 
-指定**ceph-node-0**节点作为Ceph-deploy服务器，在该节点配置免密登录所有Ceph节点。
+### 5.1. Ceph-deploy 节点 SSH 免密配置
+
+指定 **ceph-node-0** 节点作为 Ceph-deploy 服务器，在该节点配置免密登录所有 Ceph 节点。
 
 > **执行任务命令**
 
@@ -674,7 +674,7 @@ and check to make sure that only the key(s) you wanted were added.
 
 ```
 
-### 5.2 Ceph-deploy安装
+### 5.2 Ceph-deploy 安装
 
 > **执行任务命令**
 
@@ -811,11 +811,11 @@ Dependency Installed:
 Complete!
 ```
 
----
 
-## 6. 创建Ceph存储集群
 
-**如无特殊说明，本节所有操作都在ceph-node-0节点执行**
+## 6. 创建 Ceph 存储集群
+
+**如无特殊说明，本节所有操作都在 ceph-node-0 节点执行**
 
 ### 6.1. 创建集群配置目录
 
@@ -826,7 +826,7 @@ mkdir k8s-cluster
 cd k8s-cluster
 ```
 
-### 6.2. 初始化Ceph集群
+### 6.2. 初始化 Ceph 集群
 
 > **执行任务命令**
 
@@ -855,25 +855,25 @@ ansible ceph -m shell -a 'yum install -y yum-plugin-priorities'
 ansible ceph -m shell -a 'yum install -y ceph'
 ```
 
-- 部署初始monitor服务
+- 部署初始 monitor 服务
 
 ```shell
 ceph-deploy mon create-initial
 ```
 
-- 复制配置文件和admin key到其他节点
+- 复制配置文件和 admin key 到其他节点
 
 ```shell
 ceph-deploy admin ceph-node-0 ceph-node-1 ceph-node-2
 ```
 
-- 部署manager daemon(可选)
+- 部署 manager daemon(可选)
 
 ```shell
 ceph-deploy mgr create ceph-node-0
 ```
 
-- 创建OSD
+- 创建 OSD
 
 ```shell
 ceph-deploy osd create --data /dev/sdb ceph-node-0
@@ -892,7 +892,7 @@ ceph health
 HEALTH_WARN mon is allowing insecure global_id reclaim; Module 'restful' has failed dependency: No module named 'pecan'
 ```
 
-- 解决ceph health WARN问题
+- 解决 ceph health WARN 问题
 
 ```shell
 # mon is allowing insecure global_id reclaim 
@@ -1351,7 +1351,7 @@ Successfully installed Mako-1.1.6 MarkupSafe-2.0.1 WebOb-1.8.7 WebTest-3.0.0 bea
     pgs:     1 active+clean
 ```
 
----
+
 
 ## 7. 扩展集群
 
@@ -1549,7 +1549,7 @@ ceph-deploy mgr create ceph-node-2
 
 ### 7.3. 集群状态查看
 
-> **执行任务命令(含输出)**
+> **执行任务命令 (含输出)**
 
 ```shell
 [root@ceph-node-0 k8s-cluster]# ceph -s
@@ -1571,7 +1571,7 @@ ceph-deploy mgr create ceph-node-2
     pgs:     1 active+clean
 ```
 
----
+
 
 ## 8. 常见问题
 
@@ -1610,26 +1610,26 @@ ceph-deploy new: error: 192.168.9.65 must be a hostname not an IP
 
 > **解决方案**
 
-Ceph-deploy部署时不支持节点使用IP的形式，必须使用主机名，因此还要注意/etc/hosts配置文件一定要做解析。
+Ceph-deploy 部署时不支持节点使用 IP 的形式，必须使用主机名，因此还要注意 /etc/hosts 配置文件一定要做解析。
 
 ---
 
 ## 9. 总结
 
-本文简单介绍了Ceph分布式存储集群常用的安装部署方式，重点详细讲解了通过Ceph-deploy部署Ceph Octopus的全部过程。
+本文简单介绍了 Ceph 分布式存储集群常用的安装部署方式，重点详细讲解了通过 Ceph-deploy 部署 Ceph Octopus 的全部过程。
 
-本文仅适用于学习测试环境，生产环境建议使用Rook的方式。
+本文仅适用于学习测试环境，生产环境建议使用 Rook 的方式。
 
 > **参考文档**
 
-- [官网Ceph安装过程](https://docs.ceph.com/en/octopus/install/ceph-deploy/quick-ceph-deploy/)
+- [官网 Ceph 安装过程](https://docs.ceph.com/en/octopus/install/ceph-deploy/quick-ceph-deploy/)
 
-> **Get文档**
+> **Get 文档**
 
 - Github https://github.com/devops/z-notes
 - Gitee https://gitee.com/zdevops/z-notes
 
-> **Get代码**
+> **Get 代码**
 
 - Github https://github.com/devops/ansible-zdevops
 - Gitee https://gitee.com/zdevops/ansible-zdevops
@@ -1644,9 +1644,9 @@ Ceph-deploy部署时不支持节点使用IP的形式，必须使用主机名，�
 
 > **About Me**
 
-- 昵称：老Z
+- 昵称：老 Z
 - 坐标：山东济南
-- 职业：运维架构师/高级运维工程师=**运维**
+- 职业：运维架构师 / 高级运维工程师 =**运维**
 - 微信：zdevops
-- 关注的领域：云计算/云原生技术运维，自动化运维
+- 关注的领域：云计算 / 云原生技术运维，自动化运维
 - 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
