@@ -47,6 +47,12 @@ Xxx
 | glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
 | glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
 
+> **演示环境涉及软件版本信息**
+
+- 操作系统：**CentOS-7.9-x86_64**
+
+  
+
 ## 2. Ansible配置
 
 ## 3. 主题正文
