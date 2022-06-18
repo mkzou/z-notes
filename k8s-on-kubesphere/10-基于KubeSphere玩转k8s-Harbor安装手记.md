@@ -28,7 +28,7 @@
 - 行：775
 - 单词：4400+
 - 字符：22700+
-- 图片：31 张
+- 图片：30 张
 
 > **本文知识点**
 
@@ -323,15 +323,15 @@ ansible all -m shell -a 'echo "192.168.9.89   registry.zdevops.com.cn" >> /etc/h
 
 - 通过浏览器登录 Harbor 控制台，https://registry.zdevops.com.cn。默认用户 admin，默认密码 Harbor12345。
 
-![kube-harbor-0](/Users/z/data-air/个人知识库/图床/kube-harbor-0.png)
+![kube-harbor-0](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-0.png)
 
 - 右上角 **admin**->**修改密码**。
 
-![kube-harbor-1](/Users/z/data-air/个人知识库/图床/kube-harbor-1.png)
+![kube-harbor-1](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-1.png)
 
 - 在弹出的**修改密码**对话框中修改。
 
-![kube-harbor-3](/Users/z/data-air/个人知识库/图床/kube-harbor-3.png)
+![kube-harbor-3](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-3.png)
 
 ### 6.2. 创建管理员用户
 
@@ -339,15 +339,15 @@ ansible all -m shell -a 'echo "192.168.9.89   registry.zdevops.com.cn" >> /etc/h
 
 - **系统管理**->**用户管理**->**创建用户**，在弹出的**创建用户**对话框中按提示输入用户信息。
 
-![kube-harbor-4](/Users/z/data-air/个人知识库/图床/kube-harbor-4.png)
+![kube-harbor-4](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-4.png)
 
-![kube-harbor-5](/Users/z/data-air/个人知识库/图床/kube-harbor-5.png)
+![kube-harbor-5](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-5.png)
 
 - 用户创建完成后，自动返回**用户管理**页面，选择新创建的用户，点击**设置为管理员**。
 
-![kube-harbor-6](/Users/z/data-air/个人知识库/图床/kube-harbor-6.png)
+![kube-harbor-6](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-6.png)
 
-![kube-harbor-7](/Users/z/data-air/个人知识库/图床/kube-harbor-7.png)
+![kube-harbor-7](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-7.png)
 
 ### 6.3. 创建 devops 用户
 
@@ -359,21 +359,21 @@ ansible all -m shell -a 'echo "192.168.9.89   registry.zdevops.com.cn" >> /etc/h
 
 - 修改机器人账户名称前缀，**系统管理**->**配置管理**->**系统设置**，修改**机器人账户名称前缀**为 **robot-**。
 
-![kube-harbor-8](/Users/z/data-air/个人知识库/图床/kube-harbor-8.png)
+![kube-harbor-8](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-8.png)
 
 - 创建机器人账户，**系统管理**->**机器人账户**->**添加机器人账户**，在弹出的**创建系统级机器人账户**窗口，按图示填写账户信息，点击**添加**。
 
-![kube-harbor-9](/Users/z/data-air/个人知识库/图床/kube-harbor-9.png)
+![kube-harbor-9](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-9.png)
 
-![kube-harbor-10](/Users/z/data-air/个人知识库/图床/kube-harbor-10.png)
+![kube-harbor-10](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-10.png)
 
 - 账户创建成功，弹出**机器人账户令牌**界面，选择**导出到文件中**，并妥善保存。也可以选择复制令牌到自己的密码管理软件中。
 
-![kube-harbor-11](/Users/z/data-air/个人知识库/图床/kube-harbor-11.png)
+![kube-harbor-11](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-11.png)
 
 - 令牌导出后，自动返回**机器人账户**列表。
 
-![kube-harbor-12](/Users/z/data-air/个人知识库/图床/kube-harbor-12.png)
+![kube-harbor-12](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-12.png)
 
 ### 6.4. 创建项目
 
@@ -381,15 +381,15 @@ ansible all -m shell -a 'echo "192.168.9.89   registry.zdevops.com.cn" >> /etc/h
 
 - **项目**->**新建项目**，在弹出的**新建项目**对话框中填写信息，点击**确定**，自动返回项目列表。
 
-![kube-harbor-13](/Users/z/data-air/个人知识库/图床/kube-harbor-13.png)
+![kube-harbor-13](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-13.png)
 
-![kube-harbor-14](/Users/z/data-air/个人知识库/图床/kube-harbor-14.png)
+![kube-harbor-14](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-14.png)
 
-![kube-harbor-15](/Users/z/data-air/个人知识库/图床/kube-harbor-15.png)
+![kube-harbor-15](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-15.png)
 
 - 设置自动漏洞扫描，在项目列表页面选择新创建的项目，**配置管理**，勾选**自动扫描镜像**。
 
-![kube-harbor-16](/Users/z/data-air/个人知识库/图床/kube-harbor-16.png)
+![kube-harbor-16](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-16.png)
 
 ## 7. KubeSphere 对接 Harbor
 
@@ -649,15 +649,15 @@ round-trip min/avg/max = 0.435/0.675/1.186 ms
   - **用户名：** 登录镜像仓库所需的用户名
   - **密码：** 登录镜像仓库所需用户的密码
 
-![kube-harbor-17](/Users/z/data-air/个人知识库/图床/kube-harbor-17.png)
+![kube-harbor-17](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-17.png)
 
-![kube-harbor-18](/Users/z/data-air/个人知识库/图床/kube-harbor-18.png)
+![kube-harbor-18](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-18.png)
 
-![kube-harbor-19](/Users/z/data-air/个人知识库/图床/kube-harbor-19.png)
+![kube-harbor-19](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-19.png)
 
 - 输入正确的信息后，点击**验证**按钮，如图显示 **镜像仓库验证通过**，点击**创建**，返回保密字典列表。
 
-![kube-harbor-20](/Users/z/data-air/个人知识库/图床/kube-harbor-20.png)
+![kube-harbor-20](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-20.png)
 
 ## 8. 验证测试
 
@@ -707,33 +707,33 @@ latest: digest: sha256:ee89b00528ff4f02f2405e4ee221743ebc3f8e8dd0bfd5c4c20a2fa2a
 - 用项目管理员账户登录 KubeSphere 控制台
 - **在具体项目 zdevos 下**->**应用负载**->**工作负载**->**部署**->**创建**, **创建部署**页面输入**名称**。
 
-![kube-harbor-21](/Users/z/data-air/个人知识库/图床/kube-harbor-21.png)
+![kube-harbor-21](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-21.png)
 
 - 点击**添加容器**，容器设置里选择自定义容器仓库。
 
-![kube-harbor-22](/Users/z/data-air/个人知识库/图床/kube-harbor-22.png)
+![kube-harbor-22](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-22.png)
 
-![kube-harbor-23](/Users/z/data-air/个人知识库/图床/kube-harbor-23.png)
+![kube-harbor-23](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-23.png)
 
 - 镜像选择：输入上传的 nginx 私有镜像的仓库地址
 
-![kube-harbor-24](/Users/z/data-air/个人知识库/图床/kube-harbor-24.png)
+![kube-harbor-24](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-24.png)
 
 - 接下来按图示下一步即可。
 
-![kube-harbor-25](/Users/z/data-air/个人知识库/图床/kube-harbor-25.png)
+![kube-harbor-25](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-25.png)
 
-![kube-harbor-26](/Users/z/data-air/个人知识库/图床/kube-harbor-26.png)
+![kube-harbor-26](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-26.png)
 
-![kube-harbor-27](/Users/z/data-air/个人知识库/图床/kube-harbor-27.png)
+![kube-harbor-27](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-27.png)
 
-![kube-harbor-28](/Users/z/data-air/个人知识库/图床/kube-harbor-28.png)
+![kube-harbor-28](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-28.png)
 
 - 查看创建的 nginx 的 YAML 配置文件
 
-![kube-harbor-29](/Users/z/data-air/个人知识库/图床/kube-harbor-29.png)
+![kube-harbor-29](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-29.png)
 
-![kube-harbor-30](/Users/z/data-air/个人知识库/图床/kube-harbor-30.png)
+![kube-harbor-30](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/kube-harbor-30.png)
 
 ## 9. 总结
 
