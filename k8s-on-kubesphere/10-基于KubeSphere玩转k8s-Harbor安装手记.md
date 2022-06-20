@@ -164,7 +164,7 @@ ansible-playbook ../../playbooks/deploy-docker.yaml -l harbor
 - 腾讯云 (一年)
 - Let's Encrypt(90 天)
 
-我的域名 (regsitry.zdevops.com.cn) 是在阿里云买的，所有就选择阿里云的 SSL 免费证书，申请过程略。
+我的域名 (registry.zdevops.com.cn) 是在阿里云买的，所有就选择阿里云的 SSL 免费证书，申请过程略。
 
 申请后，下载 **Nginx** 或是**其他**类型的证书。
 
