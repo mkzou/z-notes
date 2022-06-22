@@ -37,19 +37,25 @@ Xxx
 
 > **演示服务器配置**
 
-|      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘 |               用途               |
-| :--------------: | :----------: | :--: | :--: | :----: | :----: | :------------------------------: |
-|  zdeops-master   | 192.168.9.9  |  2   |  4   |   40   |  200   |       Ansible运维控制节点        |
-| ks-k8s-master-0  | 192.168.9.91 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-1  | 192.168.9.92 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| ks-k8s-master-2  | 192.168.9.93 |  8   |  32  |   40   |  200   | KubeSphere/k8s-master/k8s-worker |
-| glusterfs-node-0 | 192.168.9.95 |  4   |  8   |   40   |  200   |            GlusterFS             |
-| glusterfs-node-1 | 192.168.9.96 |  4   |  8   |   40   |  200   |            GlusterFS             |
-| glusterfs-node-2 | 192.168.9.97 |  4   |  8   |   40   |  200   |            GlusterFS             |
+|      主机名      |      IP      | CPU  | 内存 | 系统盘 | 数据盘  |                 用途                  |
+| :--------------: | :----------: | :--: | :--: | :----: | :-----: | :-----------------------------------: |
+|  zdeops-master   | 192.168.9.9  |  2   |  4   |   40   |   200   |          Ansible运维控制节点          |
+| ks-k8s-master-0  | 192.168.9.91 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
+| ks-k8s-master-1  | 192.168.9.92 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
+| ks-k8s-master-2  | 192.168.9.93 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
+| glusterfs-node-0 | 192.168.9.95 |  2   |  8   |   40   |   200   |               GlusterFS               |
+| glusterfs-node-1 | 192.168.9.96 |  2   |  8   |   40   |   200   |               GlusterFS               |
+| glusterfs-node-2 | 192.168.9.97 |  2   |  8   |   40   |   200   |               GlusterFS               |
+|      harbor      | 192.168.9.89 |  2   |  8   |   40   |   200   |                Harbor                 |
+|       合计       |      8       |  22  |  84  |  320   |  2200   |                                       |
 
 > **演示环境涉及软件版本信息**
 
 - 操作系统：**CentOS-7.9-x86_64**
+
+- Ansible：**2.8.20**
+
+- Harbor：**2.5.1**
 
   
 
