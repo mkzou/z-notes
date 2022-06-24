@@ -156,7 +156,7 @@ spec:
               cpu: '2'
               memory: 4000Mi
             requests:
-              cpu: 500m
+              cpu: 100m
               memory: 500Mi
       volumes:
         - name: config
@@ -341,7 +341,7 @@ spec:
               cpu: '2'
               memory: 4000Mi
             requests:
-              cpu: 500m
+              cpu: 100m
               memory: 500Mi
       volumes:
         - name: config
@@ -677,10 +677,10 @@ spec:
               protocol: TCP
           resources:
             limits:
-              cpu: '4'
-              memory: 8000Mi
+              cpu: '2'
+              memory: 4000Mi
             requests:
-              cpu: 50m
+              cpu: 100m
               memory: 500Mi
 
 ---
