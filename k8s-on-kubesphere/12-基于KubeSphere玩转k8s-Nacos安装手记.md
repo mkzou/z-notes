@@ -9,16 +9,16 @@
 **本系列文档内容涵盖 (但不限于) 以下技术领域：**
 
 > - **KubeSphere**
->
-> - **Kubernetes**
->
+>- **Kubernetes**
 > - **Ansible**
->
-> - **自动化运维**
->
+>- **自动化运维**
 > - **CNCF 技术栈**
 
-## 1. 本文简介
+**本文内容概览**
+
+![nacos](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220702172207520.png)
+
+## 1. 简介
 
 Nacos 集群如何在 K8S 集群上部署？Nacos 依赖的 MySQL 数据库如何在 K8S 集群上部署？GitOps 在 K8S 集群上是一种什么体验？本文将带你全面了解上述问题。
 
@@ -28,7 +28,7 @@ Nacos 集群如何在 K8S 集群上部署？Nacos 依赖的 MySQL 数据库如�
 - 行：835
 - 单词：2900+
 - 字符：22100
-- 图片：5 张
+- 图片：6 张
 
 > **本文知识点**
 
