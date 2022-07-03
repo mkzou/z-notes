@@ -115,7 +115,7 @@ KubeKey 生成 manifest 文件有两种方式。
 wget https://github.com/kubesphere/ks-installer/releases/download/v3.3.0/images-list.txt
 ```
 
-文中的 image 列表选用的 dockerhu 仓库其他组件存放的公共仓库，国内建议统一更改前缀为 **registry.cn-beijing.aliyuncs.com/kubesphereio**
+文中的 image 列表选用的 dockerhub 仓库其他组件存放的公共仓库，国内建议统一更改前缀为 **registry.cn-beijing.aliyuncs.com/kubesphereio**
 
 修改后的完整的镜像列表在下面的 manifest 文件中展示。
 
@@ -392,6 +392,9 @@ ansible -m ping all
 # 利用 ansible-playbook 初始化服务器配置
 
 ansible-playbook ../../playbooks/init-base.yaml -l k8s
+
+# 利用 ansible 添加hosts 解析
+ansible k8s -m shell -a 'echo "192.168.9.89 registry.zdevops.com.cn" >> /etc/hosts'
 ```
 
 ### 3.4. 挂载数据盘
@@ -409,10 +412,10 @@ ansible-playbook ../../playbooks/init-disk.yaml -e data_disk_path="/data" -l k8s
 
 ```shell
 # 利用 ansible 验证数据盘是否格式化并挂载
-ansible harbor -m shell -a 'df -h'
+ansible k8s -m shell -a 'df -h'
 
 # 利用 ansible 验证数据盘是否配置自动挂载
-ansible harbor -m shell -a 'tail -1  /etc/fstab'
+ansible k8s -m shell -a 'tail -1  /etc/fstab'
 ```
 
 ### 3.5. 安装 K8S 系统依赖包
