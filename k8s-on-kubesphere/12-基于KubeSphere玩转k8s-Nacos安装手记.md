@@ -357,7 +357,7 @@ Fast-forward
 
 **在运维管理服务器上操作**
 
-- `更新镜像仓库代码
+- 更新镜像仓库代码
 
 ```shell
 [root@zdevops-master k8s-yaml]# git pull
@@ -730,7 +730,7 @@ Switched to a new branch 'main-nacos-062402'
 
 **在运维管理服务器上操作**
 
-- `更新镜像仓库代码
+- 更新镜像仓库代码
 
 ```shell
 [root@zdevops-master k8s-yaml]# git pull
