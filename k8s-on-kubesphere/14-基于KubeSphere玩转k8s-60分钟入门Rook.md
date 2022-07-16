@@ -1,4 +1,4 @@
-基于 KubeSphere 玩转 k8s-60 分钟入门 Rook
+# 基于 KubeSphere 玩转 k8s-60 分钟入门 Rook
 
 **大家好，我是老 Z！**
 
@@ -9,9 +9,9 @@
 > **本文知识量**
 
 - 阅读时长：20 分
-- 行：868
-- 单词：4300+
-- 字符：28900+
+- 行：8978
+- 单词：4500+
+- 字符：29500+
 - 图片：6张
 
 > **本文知识点**
@@ -43,8 +43,8 @@
 - KubeSphere：**3.3.0**
 - Kubernetes：**v1.24.1**
 - Rook：**v1.9.7**
-- GlusterFS：**www**
-- ElasticSearch：**ww**
+- GlusterFS：**9.5.1**
+- ElasticSearch：**7.17.5**
 - Harbor：**2.5.1**
 
 ## 1. 简介
