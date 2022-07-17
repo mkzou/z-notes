@@ -288,52 +288,54 @@ cat images.txt | awk -F "/" '{print "docker pull "$0" && docker tag "$0" registr
 
 ### 3.3. 服务器镜像下载
 
+此步骤本文并未执行，适用于**「4.1 修改镜像地址」**方案二。
+
 - 拉取内网镜像
 
 ```shell
-crictl pull registry.zdevops.com.cn/ceph/ceph:v16.2.9
-crictl pull registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2
-crictl pull registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0
-crictl pull registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0
-crictl pull registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0
-crictl pull registry.zdevops.com.cn/sig-storage/csi-node-driver-registrar:v2.5.1
-crictl pull registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0
-crictl pull registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0
-crictl pull registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1
-crictl pull registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0
-crictl pull registry.zdevops.com.cn/rook/ceph:v1.9.7
+ctr images pull registry.zdevops.com.cn/ceph/ceph:v16.2.9
+ctr images pull registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2
+ctr images pull registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0
+ctr images pull registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0
+ctr images pull registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0
+ctr images pull registry.zdevops.com.cn/sig-storage/csi-node-driver-registrar:v2.5.1
+ctr images pull registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0
+ctr images pull registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0
+ctr images pull registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1
+ctr images pull registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0
+ctr images pull registry.zdevops.com.cn/rook/ceph:v1.9.7
 ```
 
 - 重新打 tag
 
 ```shell
-crictl image tag registry.zdevops.com.cn/ceph/ceph:v16.2.9 quay.io/ceph/ceph:v16.2.9
-crictl image tag registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2 quay.io/cephcsi/cephcsi:v3.6.2
-crictl image tag registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0 quay.io/csiaddons/k8s-sidecar:v0.4.0
-crictl image tag registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0 quay.io/csiaddons/volumereplication-operator:v0.3.0
-crictl image tag registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0 registry.k8s.io/sig-storage/csi-attacher:v3.4.0
-crictl image tag registry.zdevops.com.cn/sig-storage/csi-node-driver-registrar:v2.5.1 registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.5.1
-crictl image tag registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0 registry.k8s.io/sig-storage/csi-provisioner:v3.1.0
-crictl image tag registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0 registry.k8s.io/sig-storage/csi-resizer:v1.4.0
-crictl image tag registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1 registry.k8s.io/sig-storage/csi-snapshotter:v6.0.1
-crictl image tag registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0 registry.k8s.io/sig-storage/nfsplugin:v4.0.0
-crictl image tag registry.zdevops.com.cn/rook/ceph:v1.9.7 rook/ceph:v1.9.7
+ctr -n k8s.io images tag registry.zdevops.com.cn/ceph/ceph:v16.2.9 quay.io/ceph/ceph:v16.2.9
+ctr -n k8s.io images tag registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2 quay.io/cephcsi/cephcsi:v3.6.2
+ctr -n k8s.io images tag registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0 quay.io/csiaddons/k8s-sidecar:v0.4.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0 quay.io/csiaddons/volumereplication-operator:v0.3.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0 registry.k8s.io/sig-storage/csi-attacher:v3.4.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/csi-node-driver-registrar:v2.5.1 registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.5.1
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0 registry.k8s.io/sig-storage/csi-provisioner:v3.1.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0 registry.k8s.io/sig-storage/csi-resizer:v1.4.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1 registry.k8s.io/sig-storage/csi-snapshotter:v6.0.1
+ctr -n k8s.io images tag registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0 registry.k8s.io/sig-storage/nfsplugin:v4.0.0
+ctr -n k8s.io images tag registry.zdevops.com.cn/rook/ceph:v1.9.7 rook/ceph:v1.9.7
 ```
 
 - 清理临时镜像
 
 ```shell
-docker rmi registry.zdevops.com.cn/ceph/ceph:v16.2.9
-docker rmi registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2
-docker rmi registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0
-docker rmi registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0
-docker rmi registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0
-docker rmi registry.zdevops.com.cn/csi-node-driver-registrar:v2.5.1
-docker rmi registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0
-docker rmi registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0
-docker rmi registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1
-docker rmi registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0
-docker rmi registry.zdevops.com.cn/rook/ceph:v1.9.7
+ctr -n k8s.io images rm registry.zdevops.com.cn/ceph/ceph:v16.2.9
+ctr -n k8s.io images rm registry.zdevops.com.cn/cephcsi/cephcsi:v3.6.2
+ctr -n k8s.io images rm registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/csi-node-driver-registrar:v2.5.1
+ctr -n k8s.io images rm registry.zdevops.com.cn/sig-storage/csi-provisioner:v3.1.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/sig-storage/csi-resizer:v1.4.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/sig-storage/csi-snapshotter:v6.0.1
+ctr -n k8s.io images rm registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0
+ctr -n k8s.io images rm registry.zdevops.com.cn/rook/ceph:v1.9.7
 ```
 
 ## 4. Rook 部署 Ceph 集群
@@ -345,7 +347,7 @@ docker rmi registry.zdevops.com.cn/rook/ceph:v1.9.7
 有两种可选方案，
 
 - 方案一：编辑配置文件，替换引用的镜像仓库地址。
-- 方案二：利用内网镜像仓库将镜像下载到服务器，然后重新打 tag，将前缀换为互联网的原始地址。
+- 方案二：利用内网镜像仓库将镜像下载到服务器，然后重新打 tag，将前缀换为互联网的原始地址，具体操作参考**「3.3 服务器镜像下载」**。
 
 **本文采用方案一，具体操作如下：**
 
@@ -362,6 +364,8 @@ ROOK_CSI_ATTACHER_IMAGE: "registry.zdevops.com.cn/sig-storage/csi-attacher:v3.4.
 ROOK_CSI_NFS_IMAGE: "registry.zdevops.com.cn/sig-storage/nfsplugin:v4.0.0"
 CSI_VOLUME_REPLICATION_IMAGE: "registry.zdevops.com.cn/csiaddons/volumereplication-operator:v0.3.0"
 ROOK_CSIADDONS_IMAGE: "registry.zdevops.com.cn/csiaddons/k8s-sidecar:v0.4.0"
+
+image: registry.zdevops.com.cn/rook/ceph:v1.9.7
 ```
 
 - 编辑配置文件**「cluster.yaml」**，修改镜像为本地镜像
@@ -380,6 +384,7 @@ sed -i '437,437s/^.*#/ /g' operator.yaml
 
 # 替换镜像地址前缀
 sed -i -e 's/registry.k8s.io/registry.zdevops.com.cn/g' -e 's/quay.io/registry.zdevops.com.cn/g' operator.yaml
+sed -i 's|rook/ceph:v1.9.7|registry.zdevops.com.cn/rook/ceph:v1.9.7|g' operator.yaml
 sed -i '24,24s/quay.io/registry.zdevops.com.cn/g' cluster.yaml
 ```
 
