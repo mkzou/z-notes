@@ -860,6 +860,44 @@ dd if=/dev/zero of=/dev/sdc bs=512k count=1
 wipefs -af /dev/sdc
 ```
 
+### 8.3. Dashboard 打不开
+
+当你配置完在集群外部访问 Dashboard，用浏览器打开页面，出现以下问题
+
+- 页面一致处于加载状态，浏览器的左下角会显示一个 10开头的K8s 内部网络IP
+- 用浏览器的开发者工具观察网络请求，也会有访问 10开头的K8s 内部网络IP 的请求
+- 过一段时间就会超时并跳转到 Mgr 的 POD IP
+
+使用如下的资源清单重新创建服务能暂时解决问题，深层次的原因还需要再分析
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: rook-ceph-mgr-dashboard-external-https
+  namespace: rook-ceph
+  labels:
+    app: rook-ceph-mgr
+    rook_cluster: rook-ceph
+spec:
+  ports:
+  - name: dashboard
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+    nodePort: 31443
+  selector:
+    app: rook-ceph-mgr
+    rook_cluster: rook-ceph
+    mgr: a
+  sessionAffinity: None
+  type: NodePort
+```
+
+> 主要是加了一个`mgr: a`的selector，因为mgr是主备模式的，默认a处于活动状态，因此要选择a才能打开
+
+
+
 ## 片尾语
 
 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
