@@ -90,7 +90,7 @@
 
 - 昵称：老 Z
 - 坐标：山东济南
-- 职业：运维架构师 / 高级运维工程师 =**运维**
+- 职业：运维架构师 / 高级运维工程师 = **运维**
 - 微信：zdevops(公号输入框回复"w"即可)
 - 关注的领域：云计算 / 云原生技术运维，自动化运维
-- 技能标签：OpenStack、Ansible、K8S、Python、Go、CNCF
+- 技能标签：OpenStack、Ansible、K8S、Python、Go、DevOps、CNCF
