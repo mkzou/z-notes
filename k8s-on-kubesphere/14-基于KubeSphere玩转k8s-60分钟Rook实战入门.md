@@ -1,22 +1,24 @@
-# 基于 KubeSphere 玩转 k8s-60 分钟入门 Rook
+# 基于 KubeSphere 玩转 k8s｜60 分钟 Rook 实战入门
 
 **大家好，我是老 Z！**
 
 > **欢迎来到云原生技术栈实战系列之基于 KubeSphere 玩转 K8s**
 
-## 内容概览
+## 前言
 
-![image-20220716174401126](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/image-20220716174401126.png)
+> **导图**
 
-> **本文知识量**
+![rook-architecture](https://znotes-1258881081.cos.ap-beijing.myqcloud.com/k8s-on-kubesphere/rook-architecture.png)
+
+> **知识量**
 
 - 阅读时长：20 分
-- 行：899
-- 单词：4500+
-- 字符：29700+
+- 行：944
+- 单词：4800+
+- 字符：30900+
 - 图片：7 张
 
-> **本文知识点**
+> **知识点**
 
 - 定级：**入门级**
 - Rook 概览
@@ -32,9 +34,9 @@
 | ks-k8s-master-0 | 192.168.9.91 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
 | ks-k8s-master-1 | 192.168.9.92 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
 | ks-k8s-master-2 | 192.168.9.93 |  4   |  16  |   40   | 200+200 | KubeSphere/k8s-master/k8s-worker/Ceph |
-|    es-node-0    | 192.168.9.95 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
-|    es-node-1    | 192.168.9.96 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
-|    es-node-2    | 192.168.9.97 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
+|    storage-node-0    | 192.168.9.95 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
+|    storage-node-1    | 192.168.9.96 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
+|    storage-node-2    | 192.168.9.97 |  2   |  8   |   40   | 200+200 |        ElasticSearch/GlusterFS        |
 |     harbor      | 192.168.9.89 |  2   |  8   |   40   |   200   |                Harbor                 |
 |      合计       |      8       |  22  |  84  |  320   |  2800   |                                       |
 
@@ -898,7 +900,7 @@ spec:
 
 
 
-## 片尾语
+## 结束语
 
 本系列文档是我在云原生技术领域的学习和运维实践的手记，**用输出倒逼输入**是一种高效的学习方法，能够快速积累经验和提高技术，只有把学到的知识写出来并能够让其他人理解，才能说明真正掌握了这项知识。
 
